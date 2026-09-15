@@ -1,205 +1,160 @@
 # LaTeX Collab
 
-Ver [SPEC.md](./SPEC.md) para la especificación completa (arquitectura, flujos,
-alcance). Este README es solo la guía rápida para correr el proyecto.
+Editor de LaTeX colaborativo en tiempo real, autoalojado — como Google Docs
+para proyectos de LaTeX, pero corriendo en tu propia máquina, sin nube de
+por medio. Varias personas editan el mismo archivo a la vez, con cursores
+de colores, y cada quien compila con el programa que prefiera (Texifier,
+TeXmaker, o la vista previa integrada).
 
-## Estructura
+Ver [SPEC.md](./SPEC.md) para la arquitectura completa. Este README es la
+guía de instalación y uso.
 
-```
-packages/
-  shared/    # tipos TypeScript compartidos
-  server/    # servidor Node/TS: REST + WebSocket (Yjs) + persistencia a disco
-  desktop/   # app Tauri (React + CodeMirror6) — cliente
-templates/   # plantillas base (article, report, beamer, cv)
-```
+## Instalación desde cero
 
-## Instalación
+### 1. Requisitos previos
 
-### Opción 1 — un solo comando (recomendado)
+Solo necesitas tener **Git** instalado. Todo lo demás (Node.js, Rust, las
+librerías de sistema que necesita la app de escritorio, y opcionalmente
+Tailscale) lo instala el script del paso 3 — no hace falta instalarlo a
+mano de antemano.
+
+Sistemas soportados: **macOS** y **Linux**.
+
+### 2. Clonar el repositorio
 
 ```bash
+git clone https://github.com/Demonio0N1/latex-collab.git
+cd latex-collab
+```
+
+### 3. Correr el instalador
+
+```bash
+chmod +x setup_latex.sh
 ./setup_latex.sh
 ```
 
-Detecta tu sistema (macOS/Linux) e instala todo lo que falte: Node.js, Rust
-(necesario para compilar la app de escritorio Tauri), las librerías del
-sistema que Tauri requiere, las dependencias del proyecto, y opcionalmente
-Tailscale — incluyendo **activar Tailscale Funnel automáticamente**, para que
-el link de "Compartir" funcione para cualquiera en internet sin que instale
-nada (ver sección de abajo). Se puede correr varias veces sin problema — cada
-paso se salta solo si ya está instalado. Al final ofrece arrancar el
-servidor y la app. Usa `./setup_latex.sh --yes` para saltarte todas las
-preguntas.
+Esto detecta tu sistema operativo e instala automáticamente lo que falte:
 
-Verificado en esta sesión en macOS de punta a punta: detección de lo ya
-instalado, `npm install`, y **Tailscale Funnel real activado y probado**
-(incluyendo el caso de la instalación de Tailscale por app/App Store en Mac,
-cuyo CLI vive en `/Applications/Tailscale.app/Contents/MacOS/Tailscale` y no
-en el PATH — el script y el servidor lo buscan ahí también). Confirmado con
-una petición real de internet llegando al servidor a través de la URL
-`https://tu-maquina.tu-tailnet.ts.net`. No verificado en Linux ni Windows.
+- **Node.js** (vía `nvm`)
+- **Rust** (vía `rustup`) — necesario para compilar la app de escritorio (Tauri)
+- Las **librerías de sistema** que Tauri necesita (en Linux: `webkit2gtk` y
+  compañía; en macOS: Xcode Command Line Tools)
+- Las **dependencias del proyecto** (`npm install`)
+- Opcionalmente **Tailscale**, con la opción de activar **Tailscale
+  Funnel** automáticamente (para que los links de "Compartir" funcionen
+  para cualquiera en internet, sin que instalen nada — ver más abajo)
 
-### Opción 2 — manual
+Se puede correr las veces que quieras sin romper nada: cada paso se salta
+solo si ya está instalado. Usa `./setup_latex.sh --yes` para saltarte todas
+las preguntas y aceptar los valores recomendados.
 
-Necesitas Node.js 18+ y Rust ya instalados (ver
-[requisitos de Tauri](https://v2.tauri.app/start/prerequisites/) para las
-librerías del sistema en Linux):
+Al final, el script te pregunta si quieres arrancar el servidor y la app
+de una vez. Si dices que no, hazlo manualmente:
 
 ```bash
-npm install   # instala todo el monorepo (workspaces)
+npm run server:dev     # servidor de colaboración, en una terminal
+npm run desktop:dev    # app de escritorio, en otra terminal
 ```
 
-## Instalar la app (si te compartieron un link)
+La primera vez que arranca la app de escritorio, va a compilar la parte
+nativa (Rust/Tauri) — puede tardar varios minutos la primera vez mientras
+descarga dependencias. Las siguientes veces es casi instantáneo.
 
-Repo: https://github.com/Demonio0N1/latex-collab — clona o descarga, y corre
-`./setup_latex.sh` (ver abajo). `APP_DOWNLOAD_URL` en
-`packages/server/src/config.ts` ya apunta aquí; si haces un fork o lo mueves
-a otra cuenta, actualiza esa constante (o la variable de entorno
-`LATEX_COLLAB_DOWNLOAD_URL`) para que el link de "instalar la app" de tus
-propios proyectos compartidos apunte a tu copia.
+### 4. Primer uso
 
-## Correr el servidor de colaboración
+1. En la ventana que se abre, clic en **"Nuevo proyecto"**.
+2. Ponle un nombre, elige una plantilla (artículo, reporte, presentación,
+   CV) o importa un `.zip` existente, y elige dónde guardar la carpeta
+   (por defecto en `Documentos/LaTeX Projects/` o `Escritorio/`).
+3. Ya puedes escribir. Usa la barra de herramientas del editor para
+   insertar tablas, imágenes, fórmulas, listas, etc. sin memorizar la
+   sintaxis de LaTeX.
+4. Botón **"Vista previa PDF"** si quieres ver el resultado compilado al
+   lado del editor en tiempo real (necesitas tener una distribución LaTeX
+   instalada aparte — TeX Live, MacTeX o MiKTeX — para que esto funcione;
+   `setup_latex.sh` no la instala, es un paso independiente).
+5. Botón **"Compartir"** para invitar a alguien más — ver la sección de
+   abajo.
 
-```bash
-npm run server:dev
-# escucha en http://localhost:5959
-```
-
-Verificado en esta sesión: crear proyecto, unirse con contraseña, servir
-plantillas, importar `.zip`, sincronización en tiempo real entre **5
-clientes concurrentes** (sin límite de 2 — cualquier cantidad de personas
-puede editar el mismo archivo a la vez), persistencia a disco en texto plano
-legible por cualquier compilador, y el flujo completo de link compartible
-(ver abajo).
-
-## Correr la app de escritorio (dev)
-
-```bash
-npm run desktop:dev
-```
-
-Verificado en esta sesión con un build real (`tauri build --debug`, no solo
-`tsc`/`vite build`): la app compila, empaqueta un `.app` de macOS válido, se
-registra ante el sistema como manejador de `latexcollab://`, y el flujo de
-click-en-link → abrir app → auto-unirse → conectar WebSocket funciona de
-punta a punta.
-
-1. Reemplaza el ícono placeholder en `packages/desktop/src-tauri/icons/icon.png`
-   con tu logo real (usa `npx tauri icon ruta/a/tu/logo.png`).
-2. Tauri v2 exige declarar de antemano, en
-   `packages/desktop/src-tauri/capabilities/default.json`, cada programa
-   externo que la app puede ejecutar — no se puede correr un comando
-   arbitrario que alguien escriba en un campo de texto (a diferencia de lo
-   que asumí al principio; lo descubrí probando en vivo y lo corregí). Por
-   eso:
-   - "Abrir/compilar con mi programa" usa el mecanismo de "abrir con" del
-     sistema operativo (`opener:allow-open-path`, con el nombre de la app
-     como parámetro, ej. "Texmaker") en vez de ejecutar un comando — así
-     funciona con cualquier app instalada sin necesitar permiso extra.
-   - "Vista previa PDF" solo puede ejecutar `latexmk` (allowlisted
-     explícitamente en `capabilities/default.json`); el motor se elige con
-     un desplegable (pdfLaTeX/XeLaTeX/LuaLaTeX), no con texto libre.
-   - En macOS también corregí que las apps GUI no heredan el PATH de tu
-     terminal (`/Library/TeX/texbin` no está visible por defecto) — la app
-     lo agrega ella misma al arrancar (ver `src-tauri/src/lib.rs`).
-
-## Cómo compartir un proyecto (link clicable)
+## Cómo compartir un proyecto
 
 1. Con el proyecto abierto, botón **"Compartir"**.
-2. Si tu servidor corre en `localhost`, el diálogo detecta tus IPs de red
-   (LAN y VPN/Tailscale si tienes una activa) y te deja elegir con cuál
-   generar el link — "localhost" no sirve para nadie más que tú.
-3. Copia el **link** (`http://tu-ip:5959/open?host=...&id=...&key=...`) y
-   mándalo por donde quieras — es un link `http://` normal, cualquier app de
-   mensajería lo va a mostrar como clicable.
-4. Al abrirlo, la otra persona ve una página que intenta abrir la app
-   automáticamente (esquema `latexcollab://`, registrado ante el sistema
-   operativo la primera vez que se instala/ejecuta la app). Si no tiene la
-   app, la misma página le muestra un botón para descargarla
-   (`APP_DOWNLOAD_URL`, ver arriba).
-5. Si el esquema resuelve correctamente, la app se abre/enfoca sola, se
-   une al proyecto automáticamente con los datos del link, y conecta el
-   editor — sin que la otra persona tenga que copiar/pegar nada a mano.
-   (La opción de pegar el link o ID+contraseña a mano en "Unirse" sigue
-   disponible como alternativa.)
+2. El diálogo te sugiere direcciones para el link, incluyendo (si activaste
+   Tailscale Funnel) una marcada con 🌐 que funciona para **cualquiera en
+   internet sin que instale nada**. Sin eso, usa tu IP de red local (solo
+   sirve en la misma Wi-Fi) o tu IP de Tailscale (solo sirve si la otra
+   persona también está conectada a tu Tailscale).
+3. Copia el link y mándalo por donde quieras (WhatsApp, correo, Slack...) —
+   es un link `http(s)://` normal, cualquier app lo muestra como clicable.
+4. Al abrirlo, si la otra persona ya tiene la app instalada, se abre sola y
+   se une al proyecto automáticamente. Si no la tiene, la misma página le
+   ofrece un link para descargarla desde este repositorio.
 
-### Compartir fuera de tu red — 3 niveles, de más a menos automático
+### Compartir fuera de tu red — tres niveles
 
-**1. Tailscale Funnel (recomendado, totalmente automático) —** `setup_latex.sh`
-puede activarlo por ti. Le da a tu servidor una URL pública real
-(`https://tu-maquina.tu-tailnet.ts.net`), servida por Tailscale con HTTPS
-válido. **La otra persona NO necesita Tailscale, ni cuenta, ni nada** — solo
-recibe el link y hace clic. El diálogo "Compartir" detecta automáticamente
-si Funnel está activo y lo marca con 🌐 como opción sugerida. Si al correr
-el setup no se activó solo, hazlo a mano:
-```bash
-tailscale funnel --bg 5959
+| Nivel | Qué necesita la otra persona | Configuración |
+|---|---|---|
+| **Tailscale Funnel** (recomendado) | Nada — ni cuenta ni instalar Tailscale | Automático desde `setup_latex.sh`, o `tailscale funnel --bg 5959` a mano |
+| **Tailscale sin Funnel** | Su propia cuenta de Tailscale (cualquier proveedor) | Tú compartes solo tu máquina desde [el panel de Tailscale](https://login.tailscale.com/admin/machines) → *Share* |
+| **Sin Tailscale** | Nada, pero expone tu servidor a internet sin cifrado | Port forwarding + tu IP pública, o alojar en un VPS |
+
+La primera vez que actives Funnel puede pedirte habilitar "HTTPS
+Certificates" en el [panel de DNS de Tailscale](https://login.tailscale.com/admin/dns)
+— es un ajuste de tu cuenta, una sola vez.
+
+## Estructura del proyecto
+
 ```
-(la primera vez puede pedirte habilitar "HTTPS Certificates" en
-https://login.tailscale.com/admin/dns y confirmar que Funnel esté permitido
-en https://login.tailscale.com/admin/acls — son ajustes de tu cuenta de
-Tailscale, una sola vez).
+packages/
+  shared/    # tipos TypeScript compartidos entre servidor y app
+  server/    # servidor Node/TS: REST + WebSocket (Yjs CRDT) + persistencia a disco
+  desktop/   # app de escritorio: Tauri + React + CodeMirror6
+templates/   # plantillas base (article, report, beamer, cv)
+setup_latex.sh   # instalador de un solo comando
+```
 
-**2. Tailscale sin Funnel, con cuentas separadas —** si prefieres no exponer
-nada a internet público, cada quien mantiene su propia cuenta de Tailscale y
-tú compartes solo tu máquina: tailscale.com/admin → Machines → tu servidor →
-*Share* → generas un link de invitación. La otra persona, con su propia
-cuenta (cualquier proveedor), lo acepta y puede alcanzar tu máquina por su
-IP `100.x.x.x` — sin unirse a tu red completa ni ver tus otros dispositivos.
-(También puedes invitarla como miembro completo de tu tailnet, más simple
-pero menos aislado.)
+## Desarrollo
 
-**3. Sin Tailscale —** port forwarding + tu IP pública, o alojar el servidor
-en un VPS. Funciona pero expone el servidor sin el cifrado/autenticación que
-Tailscale da gratis; no recomendado salvo que sepas lo que haces.
+```bash
+npm install                # dependencias de todo el monorepo
+npm run server:dev         # servidor con recarga automática (tsx watch)
+npm run desktop:dev        # app de escritorio con hot-reload (vite + tauri dev)
+```
 
-## Flujo típico
+Notas si vas a tocar el código:
 
-1. `npm run server:dev` en la máquina que va a alojar el proyecto.
-2. `npm run desktop:dev` — crear un proyecto nuevo eligiendo carpeta (por
-   defecto `Documentos/LaTeX Projects/<nombre>` o `Escritorio/...`, elegible)
-   y plantilla, o importar un `.zip`.
-3. "Compartir" → enviar el link.
-4. N personas (no hay límite de 2) editan a la vez, con cursores de colores,
-   pestañas por archivo, y lista de presencia en tiempo real.
-5. Cada quien usa "Abrir/compilar con mi programa" para lanzar su propio
-   editor/compilador sobre su copia local sincronizada — nadie depende del
-   compilador de nadie más.
-6. Opcional: botón **"Vista previa PDF"** en la barra superior — abre un
-   panel al lado del editor (como Overleaf). En vez de relanzar el
-   compilador desde cero en cada cambio, arranca **un solo proceso**
-   `latexmk -pvc` (modo de vigilancia continua) que vigila el archivo y
-   recompila incrementalmente él solo — evita pagar el costo de arranque de
-   LaTeX en cada tecla, así que en la práctica es más rápido que ir
-   relanzando "Quick Build" a mano en TeXmaker. Cada persona compila con su
-   propia instalación local (elige motor: pdfLaTeX/XeLaTeX/LuaLaTeX) —
-   nadie depende del compilador de nadie más. Necesitas tener una
-   distribución LaTeX instalada (TeX Live, MacTeX, MiKTeX) — no viene
-   incluida. "Ver log" muestra la salida de `latexmk` para depurar errores.
-   Verificado en esta sesión en macOS: arranqué `latexmk -pvc` de verdad,
-   edité el archivo vigilado, y confirmé que recompiló solo sin que nadie
-   relanzara el proceso.
+- Tauri v2 exige declarar de antemano, en
+  `packages/desktop/src-tauri/capabilities/default.json`, cada programa
+  externo que la app puede ejecutar — no se puede correr un comando
+  arbitrario escrito en un campo de texto. Por eso "Vista previa PDF" solo
+  permite ejecutar `latexmk` (con el motor elegido por un desplegable), y
+  "Abrir con mi programa" usa el mecanismo nativo "abrir con" del sistema
+  en vez de ejecutar un comando.
+- En macOS, las apps con interfaz gráfica no heredan el `PATH` de tu
+  terminal — la app agrega `/Library/TeX/texbin` sola al arrancar (ver
+  `packages/desktop/src-tauri/src/lib.rs`) para poder encontrar `latexmk`.
+- Antes de un build de producción, reemplaza el ícono placeholder en
+  `packages/desktop/src-tauri/icons/icon.png` (usa
+  `npx tauri icon ruta/a/tu/logo.png`).
+- Si haces un fork o mueves el proyecto a otra cuenta de GitHub, actualiza
+  `APP_DOWNLOAD_URL` en `packages/server/src/config.ts` (o la variable de
+  entorno `LATEX_COLLAB_DOWNLOAD_URL`) para que el link de "instalar la
+  app" de tus propios proyectos compartidos apunte a tu copia.
 
-## Conocido / pendiente
+## Estado del proyecto / limitaciones conocidas
 
-- Tailscale Funnel: probado en vivo (macOS, Tailscale 1.102.3) — activación
-  vía script, detección automática en el servidor, y una petición HTTPS real
-  llegando desde la URL pública. La detección parsea el texto de
-  `tailscale funnel status`; si una versión futura de Tailscale cambia ese
-  formato, se degrada a "no hay Funnel activo" sin romper el resto de la
-  app. No probado en Linux/Windows.
-- **Recuerda apagar Funnel cuando no lo necesites**: `tailscale funnel --https=443 off`
-  (o desde la app de Tailscale) — mientras esté activo, tu servidor de
-  LaTeX Collab es alcanzable por cualquiera con el link, no solo por quien
-  invites tú (la autenticación por ID+contraseña del proyecto sigue
-  aplicando, pero el servidor en sí queda expuesto a internet).
-- Renombrar/crear/borrar archivos desde la UI (hoy solo vía import/disco).
-- Endurecer permisos de Tauri (`shell:allow-execute`) a un scope más
-  restringido una vez definido el flujo real de instalación.
-- El registro del esquema `latexcollab://` en Windows/Linux usa
-  `register_all()` en runtime (ver `src-tauri/src/lib.rs`) — probado en esta
-  sesión solo en macOS; en Linux/Windows debería funcionar igual pero no se
-  verificó aquí.
-- Advertencia moderada de auditoría npm en `vite`/`esbuild`: solo afecta al
-  servidor de desarrollo (`vite dev`), no a la app empaquetada; revisar antes
-  de exponer el dev server a una red no confiable.
+- Sincronización en tiempo real probada con hasta 5 clientes concurrentes
+  editando el mismo archivo — no hay límite de 2 personas.
+- Tailscale Funnel probado en macOS (incluyendo el caso de Tailscale
+  instalado como app, cuyo CLI no queda en el `PATH` por defecto). No
+  probado en Linux ni Windows.
+- El registro del esquema `latexcollab://` para links clicables está
+  verificado en macOS; en Windows/Linux usa una ruta de código diferente
+  (`register_all()` en tiempo de ejecución) que no se ha probado todavía.
+- No hay renombrar/crear/borrar archivos desde la interfaz (por ahora, solo
+  vía importar `.zip` o editando la carpeta del proyecto directamente).
+- Sin control de versiones tipo Git integrado — puedes usar `git`
+  externamente sobre la misma carpeta del proyecto si quieres historial.
+- Advertencia moderada de auditoría de `npm` en `vite`/`esbuild`: solo
+  afecta al servidor de desarrollo (`vite dev`), no a la app empaquetada.
