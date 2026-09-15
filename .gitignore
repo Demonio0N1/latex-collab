@@ -1,0 +1,11 @@
+node_modules/
+dist/
+packages/server/dist/
+packages/desktop/src-tauri/target/
+packages/desktop/src-tauri/gen/
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+*.sqlite
+*.log
+.DS_Store

@@ -1,0 +1,12 @@
+{
+  "name": "latex-collab",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "server:dev": "npm run dev --workspace=@latex-collab/server",
+    "desktop:dev": "npm run tauri:dev --workspace=@latex-collab/desktop"
+  }
+}
