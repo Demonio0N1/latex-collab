@@ -308,13 +308,60 @@ install_latex_distribution
 echo
 
 # ---------------------------------------------------------------------------
-# 6. Comando de terminal "latex_collab" (macOS)
-#    En Linux esto no hace falta: el paquete .deb/AppImage ya instala el
-#    binario como "latex_collab" en el PATH y registra el ícono del menú
-#    de aplicaciones automáticamente (ver tauri.conf.json). En macOS las
-#    apps (.app) no quedan en el PATH por diseño del sistema, así que
-#    creamos un lanzador aparte.
+# 6. Dependencias del proyecto (necesarias antes de poder compilar la app)
 # ---------------------------------------------------------------------------
+
+info "Instalando dependencias del proyecto (npm install)..."
+npm install
+ok "Dependencias del proyecto instaladas."
+echo
+
+# ---------------------------------------------------------------------------
+# 7. Compilar e instalar la app de verdad en /Applications (macOS), con el
+#    comando de terminal "latex_collab".
+#    En Linux esto no hace falta como paso aparte: `npx tauri build` genera
+#    un .deb/AppImage que, al instalarse (dpkg -i / integrar el AppImage),
+#    ya deja el binario como "latex_collab" en el PATH y registra el ícono
+#    del menú de aplicaciones solo (ver tauri.conf.json). En macOS, en
+#    cambio, "tauri build" solo genera el .app dentro de target/ — si no se
+#    copia a /Applications, no aparece en Launchpad y "open -a" puede
+#    confundirse con la copia vieja de la carpeta de build. Por eso este
+#    paso hace la instalación real, no solo la compilación.
+# ---------------------------------------------------------------------------
+
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
+APP_INSTALLED=0
+
+build_and_install_macos_app() {
+  [ "$PLATFORM" = "macos" ] || return
+
+  if ! ask_yes "¿Compilar la app ahora e instalarla en /Applications? (recomendado; toma varios minutos la primera vez)"; then
+    warn "Omitido. Para instalarla después: cd packages/desktop && npx tauri build --debug,"
+    warn "luego copia el .app resultante (target/debug/bundle/macos/) a /Applications a mano."
+    return
+  fi
+
+  info "Compilando la app de escritorio (varios minutos la primera vez)..."
+  (cd packages/desktop && npx tauri build --debug)
+
+  local built_app="packages/desktop/src-tauri/target/debug/bundle/macos/LaTeX Collab.app"
+  if [ ! -d "$built_app" ]; then
+    warn "No encontré el .app compilado en $built_app — revisa los errores de arriba."
+    return
+  fi
+
+  info "Instalando en /Applications..."
+  rm -rf "/Applications/LaTeX Collab.app"
+  cp -R "$built_app" /Applications/
+
+  # Registrar la copia instalada y des-registrar la de la carpeta de build:
+  # si quedan las dos, "open -a" puede terminar abriendo la vieja.
+  "$LSREGISTER" -f "/Applications/LaTeX Collab.app" >/dev/null 2>&1
+  "$LSREGISTER" -u "$built_app" >/dev/null 2>&1 || true
+
+  APP_INSTALLED=1
+  ok "App instalada en /Applications/LaTeX Collab.app — ya debería verse en Launchpad."
+}
 
 install_macos_cli_shortcut() {
   [ "$PLATFORM" = "macos" ] || return
@@ -350,19 +397,11 @@ EOF
   else
     sudo mv "$tmp_shortcut" "$shortcut"
   fi
-  ok "Listo — escribe 'latex_collab' en cualquier terminal para abrir la app (una vez que esté compilada/instalada)."
+  ok "Listo — escribe 'latex_collab' en cualquier terminal para abrir la app."
 }
 
+build_and_install_macos_app
 install_macos_cli_shortcut
-echo
-
-# ---------------------------------------------------------------------------
-# 7. Dependencias del proyecto
-# ---------------------------------------------------------------------------
-
-info "Instalando dependencias del proyecto (npm install)..."
-npm install
-ok "Dependencias del proyecto instaladas."
 echo
 
 # ---------------------------------------------------------------------------
@@ -374,16 +413,22 @@ echo
 echo "Antes de compartir proyectos fuera de tu máquina, revisa:"
 echo "  packages/server/src/config.ts -> APP_DOWNLOAD_URL (hoy es un placeholder)"
 echo
-echo "Para correr el proyecto manualmente:"
+echo "Para desarrollo (hot-reload, no es la app instalada):"
 echo "  npm run server:dev     # servidor de colaboración (terminal 1)"
 echo "  npm run desktop:dev    # app de escritorio            (terminal 2)"
 echo
 if [ "$PLATFORM" = "macos" ]; then
-  echo "Una vez compilada, también puedes abrirla escribiendo: latex_collab"
+  if [ "$APP_INSTALLED" = "1" ]; then
+    echo "La app ya quedó instalada en /Applications — ábrela desde Launchpad,"
+    echo "Spotlight, o escribiendo 'latex_collab' en cualquier terminal."
+  else
+    echo "Escribe 'latex_collab' en cualquier terminal para abrirla, una vez que"
+    echo "la compiles e instales (ver el paso de arriba que omitiste)."
+  fi
 else
-  echo "Tras 'npm run tauri:build' e instalar el .deb/AppImage resultante, la app"
-  echo "aparece en el menú de aplicaciones y el comando 'latex_collab' queda"
-  echo "disponible en cualquier terminal."
+  echo "Tras 'npx tauri build' (dentro de packages/desktop) e instalar el"
+  echo ".deb/AppImage resultante, la app aparece en el menú de aplicaciones y el"
+  echo "comando 'latex_collab' queda disponible en cualquier terminal."
 fi
 echo
 

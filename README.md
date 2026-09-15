@@ -113,12 +113,14 @@ Certificates" en el [panel de DNS de Tailscale](https://login.tailscale.com/admi
   con ícono en el menú de aplicaciones, y el comando `latex_collab` queda
   disponible en cualquier terminal (el binario se llama así — ver
   `mainBinaryName` en `tauri.conf.json`). No hace falta ningún paso extra.
-- **macOS**: la app ya se ve como ícono normal en Launchpad/Dock/Finder al
-  estar en `/Applications`. Para abrirla también escribiendo `latex_collab`
-  en la terminal, `setup_latex.sh` te ofrece crear ese comando (un pequeño
-  script en `$(brew --prefix)/bin` que hace `open -a "LaTeX Collab"`).
-  Verificado en esta sesión: compilar, registrar la app, y luego
-  `latex_collab` desde una terminal nueva la abre correctamente.
+- **macOS**: `setup_latex.sh` compila la app **e instala una copia real en
+  `/Applications`** (no basta con compilarla — si se queda solo en la
+  carpeta de build no aparece en Launchpad) y crea el comando `latex_collab`
+  en `$(brew --prefix)/bin`. Verificado en esta sesión de punta a punta:
+  compilar, copiar a `/Applications`, registrar, y abrir con `latex_collab`
+  desde una terminal nueva — funciona y abre la copia correcta.
+  Para reinstalar tras un cambio de código: vuelve a correr
+  `./setup_latex.sh` (detecta y reemplaza la versión instalada).
 
 ## Estructura del proyecto
 
