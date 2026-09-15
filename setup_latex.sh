@@ -102,7 +102,7 @@ echo
 install_node() {
   if command -v node >/dev/null 2>&1 && [ "$(node -v | sed 's/v//' | cut -d. -f1)" -ge 18 ]; then
     ok "Node.js ya está instalado: $(node -v)"
-    return
+    return 0
   fi
 
   info "Instalando Node.js (LTS) vía nvm..."
@@ -127,7 +127,7 @@ echo
 install_rust() {
   if command -v cargo >/dev/null 2>&1; then
     ok "Rust ya está instalado: $(rustc --version)"
-    return
+    return 0
   fi
   info "Instalando Rust vía rustup..."
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -201,10 +201,10 @@ ts() {
 setup_tailscale_and_funnel() {
   if ! ask_yes "¿Instalar y configurar Tailscale? (deja que los links de 'Compartir' funcionen fuera de tu red, incluso para gente que no tiene Tailscale, vía Funnel)"; then
     warn "Omitido. Puedes instalarlo después desde https://tailscale.com/download"
-    return
+    return 0
   fi
 
-  install_tailscale_binary || return
+  install_tailscale_binary || return 0
 
   if ! ts status >/dev/null 2>&1; then
     info "Iniciando sesión en Tailscale — se abrirá tu navegador, inicia sesión con TU cuenta..."
@@ -213,12 +213,12 @@ setup_tailscale_and_funnel() {
   if ! ts status >/dev/null 2>&1; then
     warn "No se pudo confirmar el login de Tailscale. Corre '$TAILSCALE_BIN up' manualmente y luego"
     warn "'$TAILSCALE_BIN funnel --bg $LATEX_COLLAB_PORT' para activar el link público."
-    return
+    return 0
   fi
   ok "Tailscale conectado."
 
   if ! ask_yes "¿Activar Tailscale Funnel en el puerto $LATEX_COLLAB_PORT ahora? (necesario para el link público)"; then
-    return
+    return 0
   fi
 
   info "Activando Funnel (esto puede pedir confirmar HTTPS/Funnel en el panel de Tailscale la primera vez)..."
@@ -254,18 +254,18 @@ latexmk_found() {
 install_latex_distribution() {
   if latexmk_found; then
     ok "Ya tienes una distribución LaTeX instalada (latexmk encontrado)."
-    return
+    return 0
   fi
 
   if ! ask_yes "No encontré 'latexmk' — lo necesita 'Vista previa PDF' para compilar (también lo necesitan Texifier/TeXmaker por separado). ¿Instalar una distribución LaTeX ahora? (~200MB-1GB, varios minutos)"; then
     warn "Omitido. 'Vista previa PDF' no va a funcionar hasta que instales TeX Live/MacTeX/MiKTeX tú mismo."
-    return
+    return 0
   fi
 
   if [ "$PLATFORM" = "macos" ]; then
     if ! command -v brew >/dev/null 2>&1; then
       warn "Necesitas Homebrew para este paso automático. Instala MacTeX manualmente: https://www.tug.org/mactex/"
-      return
+      return 0
     fi
     info "Instalando BasicTeX (distribución LaTeX ligera, vía Homebrew)..."
     brew install --cask basictex
@@ -274,7 +274,7 @@ install_latex_distribution() {
       warn "BasicTeX se instaló pero no encuentro tlmgr en $MACOS_TEXBIN todavía."
       warn "Abre una terminal nueva y corre:"
       warn "  sudo $tlmgr update --self && sudo $tlmgr install latexmk collection-fontsrecommended collection-latexextra collection-langspanish"
-      return
+      return 0
     fi
     info "Instalando latexmk y los paquetes que usan las plantillas (puede tardar varios minutos)..."
     sudo "$tlmgr" update --self
@@ -293,7 +293,7 @@ install_latex_distribution() {
     sudo pacman -Sy --needed --noconfirm texlive-most
   else
     warn "No se pudo detectar un gestor de paquetes soportado. Instala TeX Live/MacTeX/MiKTeX manualmente."
-    return
+    return 0
   fi
 
   if latexmk_found; then
@@ -317,28 +317,21 @@ ok "Dependencias del proyecto instaladas."
 echo
 
 # ---------------------------------------------------------------------------
-# 7. Compilar e instalar la app de verdad en /Applications (macOS), con el
-#    comando de terminal "latex_collab".
-#    En Linux esto no hace falta como paso aparte: `npx tauri build` genera
-#    un .deb/AppImage que, al instalarse (dpkg -i / integrar el AppImage),
-#    ya deja el binario como "latex_collab" en el PATH y registra el ícono
-#    del menú de aplicaciones solo (ver tauri.conf.json). En macOS, en
-#    cambio, "tauri build" solo genera el .app dentro de target/ — si no se
-#    copia a /Applications, no aparece en Launchpad y "open -a" puede
-#    confundirse con la copia vieja de la carpeta de build. Por eso este
-#    paso hace la instalación real, no solo la compilación.
+# 7. Compilar e instalar la app de verdad (con ícono de menú y el comando
+#    de terminal "latex_collab") — "npm install" no compila la app, así
+#    que sin este paso no hay nada que "latex_collab" pueda abrir todavía.
 # ---------------------------------------------------------------------------
 
 LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
 APP_INSTALLED=0
 
 build_and_install_macos_app() {
-  [ "$PLATFORM" = "macos" ] || return
+  [ "$PLATFORM" = "macos" ] || return 0
 
   if ! ask_yes "¿Compilar la app ahora e instalarla en /Applications? (recomendado; toma varios minutos la primera vez)"; then
     warn "Omitido. Para instalarla después: cd packages/desktop && npx tauri build --debug,"
     warn "luego copia el .app resultante (target/debug/bundle/macos/) a /Applications a mano."
-    return
+    return 0
   fi
 
   info "Compilando la app de escritorio (varios minutos la primera vez)..."
@@ -347,7 +340,7 @@ build_and_install_macos_app() {
   local built_app="packages/desktop/src-tauri/target/debug/bundle/macos/LaTeX Collab.app"
   if [ ! -d "$built_app" ]; then
     warn "No encontré el .app compilado en $built_app — revisa los errores de arriba."
-    return
+    return 0
   fi
 
   info "Instalando en /Applications..."
@@ -364,7 +357,7 @@ build_and_install_macos_app() {
 }
 
 install_macos_cli_shortcut() {
-  [ "$PLATFORM" = "macos" ] || return
+  [ "$PLATFORM" = "macos" ] || return 0
 
   local bin_dir
   if command -v brew >/dev/null 2>&1; then
@@ -376,11 +369,11 @@ install_macos_cli_shortcut() {
 
   if [ -f "$shortcut" ]; then
     ok "El comando 'latex_collab' ya existe en $bin_dir."
-    return
+    return 0
   fi
 
   if ! ask_yes "¿Crear el comando 'latex_collab' para abrir la app desde cualquier terminal?"; then
-    return
+    return 0
   fi
 
   local tmp_shortcut
@@ -400,7 +393,73 @@ EOF
   ok "Listo — escribe 'latex_collab' en cualquier terminal para abrir la app."
 }
 
+build_and_install_linux_app() {
+  [ "$PLATFORM" = "linux" ] || return 0
+
+  if ! ask_yes "¿Compilar la app ahora e instalarla? (recomendado; toma varios minutos la primera vez)"; then
+    warn "Omitido. Para instalarla después: cd packages/desktop && npx tauri build --debug,"
+    warn "luego instala el .deb (dpkg -i) o usa el .AppImage en target/debug/bundle/."
+    return 0
+  fi
+
+  info "Compilando la app de escritorio (varios minutos la primera vez)..."
+  (cd packages/desktop && npx tauri build --debug)
+
+  local bundle_dir="packages/desktop/src-tauri/target/debug/bundle"
+
+  if command -v dpkg >/dev/null 2>&1; then
+    local deb_file
+    deb_file="$(find "$bundle_dir/deb" -maxdepth 1 -name "*.deb" 2>/dev/null | head -1)"
+    if [ -z "$deb_file" ]; then
+      warn "No encontré el .deb compilado en $bundle_dir/deb — revisa los errores de arriba."
+      return 0
+    fi
+    info "Instalando $deb_file (requiere sudo)..."
+    sudo dpkg -i "$deb_file" || sudo apt-get install -f -y
+    APP_INSTALLED=1
+    ok "App instalada. Debería aparecer en tu menú de aplicaciones, y 'latex_collab' ya está en el PATH."
+    return 0
+  fi
+
+  # Sin dpkg (Fedora/Arch/etc.): usamos el AppImage, que corre en cualquier
+  # distro sin instalar nada a nivel de sistema, y lo integramos a mano
+  # (comando en el PATH + entrada de menú), ya que un AppImage suelto no
+  # hace ninguna de las dos cosas por sí solo.
+  local appimage
+  appimage="$(find "$bundle_dir/appimage" -maxdepth 1 -name "*.AppImage" 2>/dev/null | head -1)"
+  if [ -z "$appimage" ]; then
+    warn "No encontré el .AppImage compilado en $bundle_dir/appimage — revisa los errores de arriba."
+    return 0
+  fi
+
+  mkdir -p "$HOME/.local/bin" "$HOME/.local/share/applications" "$HOME/.local/share/icons"
+  cp "$appimage" "$HOME/.local/bin/latex_collab"
+  chmod +x "$HOME/.local/bin/latex_collab"
+  cp packages/desktop/src-tauri/icons/icon.png "$HOME/.local/share/icons/latex-collab.png" 2>/dev/null || true
+
+  cat > "$HOME/.local/share/applications/latex-collab.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=LaTeX Collab
+Comment=Editor de LaTeX colaborativo en tiempo real, autoalojado
+Exec=$HOME/.local/bin/latex_collab
+Icon=$HOME/.local/share/icons/latex-collab.png
+Categories=Office;
+Terminal=false
+EOF
+  command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
+
+  case ":$PATH:" in
+    *":$HOME/.local/bin:"*) ;;
+    *) warn "Agrega $HOME/.local/bin a tu PATH (en ~/.bashrc o ~/.zshrc) para que 'latex_collab' funcione en la terminal." ;;
+  esac
+
+  APP_INSTALLED=1
+  ok "App instalada como AppImage en \$HOME/.local/bin/latex_collab, con entrada de menú."
+}
+
 build_and_install_macos_app
+build_and_install_linux_app
 install_macos_cli_shortcut
 echo
 
@@ -426,9 +485,14 @@ if [ "$PLATFORM" = "macos" ]; then
     echo "la compiles e instales (ver el paso de arriba que omitiste)."
   fi
 else
-  echo "Tras 'npx tauri build' (dentro de packages/desktop) e instalar el"
-  echo ".deb/AppImage resultante, la app aparece en el menú de aplicaciones y el"
-  echo "comando 'latex_collab' queda disponible en cualquier terminal."
+  if [ "$APP_INSTALLED" = "1" ]; then
+    echo "La app ya quedó instalada — deberías verla en tu menú de aplicaciones,"
+    echo "y el comando 'latex_collab' ya está disponible (abre una terminal nueva"
+    echo "si no lo encuentra todavía)."
+  else
+    echo "Escribe 'latex_collab' en cualquier terminal para abrirla, una vez que"
+    echo "la compiles e instales (ver el paso de arriba que omitiste)."
+  fi
 fi
 echo
 
