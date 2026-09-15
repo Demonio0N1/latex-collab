@@ -240,7 +240,124 @@ setup_tailscale_and_funnel
 echo
 
 # ---------------------------------------------------------------------------
-# 5. Dependencias del proyecto
+# 5. Distribución LaTeX (latexmk/pdflatex) — la necesita "Vista previa PDF"
+#    para compilar. No es lo mismo que instalar Texifier/TeXmaker: esos
+#    editores TAMBIÉN dependen de tener esto instalado por separado.
+# ---------------------------------------------------------------------------
+
+MACOS_TEXBIN="/Library/TeX/texbin"
+
+latexmk_found() {
+  command -v latexmk >/dev/null 2>&1 || [ -x "$MACOS_TEXBIN/latexmk" ]
+}
+
+install_latex_distribution() {
+  if latexmk_found; then
+    ok "Ya tienes una distribución LaTeX instalada (latexmk encontrado)."
+    return
+  fi
+
+  if ! ask_yes "No encontré 'latexmk' — lo necesita 'Vista previa PDF' para compilar (también lo necesitan Texifier/TeXmaker por separado). ¿Instalar una distribución LaTeX ahora? (~200MB-1GB, varios minutos)"; then
+    warn "Omitido. 'Vista previa PDF' no va a funcionar hasta que instales TeX Live/MacTeX/MiKTeX tú mismo."
+    return
+  fi
+
+  if [ "$PLATFORM" = "macos" ]; then
+    if ! command -v brew >/dev/null 2>&1; then
+      warn "Necesitas Homebrew para este paso automático. Instala MacTeX manualmente: https://www.tug.org/mactex/"
+      return
+    fi
+    info "Instalando BasicTeX (distribución LaTeX ligera, vía Homebrew)..."
+    brew install --cask basictex
+    local tlmgr="$MACOS_TEXBIN/tlmgr"
+    if [ ! -x "$tlmgr" ]; then
+      warn "BasicTeX se instaló pero no encuentro tlmgr en $MACOS_TEXBIN todavía."
+      warn "Abre una terminal nueva y corre:"
+      warn "  sudo $tlmgr update --self && sudo $tlmgr install latexmk collection-fontsrecommended collection-latexextra collection-langspanish"
+      return
+    fi
+    info "Instalando latexmk y los paquetes que usan las plantillas (puede tardar varios minutos)..."
+    sudo "$tlmgr" update --self
+    sudo "$tlmgr" install latexmk collection-fontsrecommended collection-latexextra collection-langspanish
+  elif command -v apt-get >/dev/null 2>&1; then
+    info "Instalando TeX Live (paquetes esenciales + latexmk, vía apt)..."
+    sudo apt-get update
+    sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+      texlive-fonts-recommended texlive-lang-spanish texlive-pictures latexmk
+  elif command -v dnf >/dev/null 2>&1; then
+    info "Instalando TeX Live (paquetes esenciales + latexmk, vía dnf)..."
+    sudo dnf install -y texlive-scheme-basic texlive-collection-latexextra \
+      texlive-collection-fontsrecommended texlive-collection-langspanish latexmk
+  elif command -v pacman >/dev/null 2>&1; then
+    info "Instalando TeX Live (texlive-most, incluye latexmk, vía pacman)..."
+    sudo pacman -Sy --needed --noconfirm texlive-most
+  else
+    warn "No se pudo detectar un gestor de paquetes soportado. Instala TeX Live/MacTeX/MiKTeX manualmente."
+    return
+  fi
+
+  if latexmk_found; then
+    ok "latexmk instalado correctamente."
+  else
+    warn "No pude confirmar que 'latexmk' haya quedado instalado. Puede que necesites abrir una terminal nueva"
+    warn "(algunos instaladores solo actualizan el PATH de sesiones nuevas)."
+  fi
+}
+
+install_latex_distribution
+echo
+
+# ---------------------------------------------------------------------------
+# 6. Comando de terminal "latex_collab" (macOS)
+#    En Linux esto no hace falta: el paquete .deb/AppImage ya instala el
+#    binario como "latex_collab" en el PATH y registra el ícono del menú
+#    de aplicaciones automáticamente (ver tauri.conf.json). En macOS las
+#    apps (.app) no quedan en el PATH por diseño del sistema, así que
+#    creamos un lanzador aparte.
+# ---------------------------------------------------------------------------
+
+install_macos_cli_shortcut() {
+  [ "$PLATFORM" = "macos" ] || return
+
+  local bin_dir
+  if command -v brew >/dev/null 2>&1; then
+    bin_dir="$(brew --prefix)/bin"
+  else
+    bin_dir="/usr/local/bin"
+  fi
+  local shortcut="$bin_dir/latex_collab"
+
+  if [ -f "$shortcut" ]; then
+    ok "El comando 'latex_collab' ya existe en $bin_dir."
+    return
+  fi
+
+  if ! ask_yes "¿Crear el comando 'latex_collab' para abrir la app desde cualquier terminal?"; then
+    return
+  fi
+
+  local tmp_shortcut
+  tmp_shortcut="$(mktemp)"
+  cat > "$tmp_shortcut" <<'EOF'
+#!/usr/bin/env bash
+exec open -a "LaTeX Collab" "$@"
+EOF
+  chmod +x "$tmp_shortcut"
+
+  mkdir -p "$bin_dir" 2>/dev/null || true
+  if [ -w "$bin_dir" ]; then
+    mv "$tmp_shortcut" "$shortcut"
+  else
+    sudo mv "$tmp_shortcut" "$shortcut"
+  fi
+  ok "Listo — escribe 'latex_collab' en cualquier terminal para abrir la app (una vez que esté compilada/instalada)."
+}
+
+install_macos_cli_shortcut
+echo
+
+# ---------------------------------------------------------------------------
+# 7. Dependencias del proyecto
 # ---------------------------------------------------------------------------
 
 info "Instalando dependencias del proyecto (npm install)..."
@@ -249,7 +366,7 @@ ok "Dependencias del proyecto instaladas."
 echo
 
 # ---------------------------------------------------------------------------
-# 6. Listo — resumen y arranque opcional
+# 8. Listo — resumen y arranque opcional
 # ---------------------------------------------------------------------------
 
 echo -e "${BOLD}Todo instalado.${NC}"
@@ -260,6 +377,14 @@ echo
 echo "Para correr el proyecto manualmente:"
 echo "  npm run server:dev     # servidor de colaboración (terminal 1)"
 echo "  npm run desktop:dev    # app de escritorio            (terminal 2)"
+echo
+if [ "$PLATFORM" = "macos" ]; then
+  echo "Una vez compilada, también puedes abrirla escribiendo: latex_collab"
+else
+  echo "Tras 'npm run tauri:build' e instalar el .deb/AppImage resultante, la app"
+  echo "aparece en el menú de aplicaciones y el comando 'latex_collab' queda"
+  echo "disponible en cualquier terminal."
+fi
 echo
 
 if ask_yes "¿Quieres que arranque el servidor y la app ahora mismo?"; then

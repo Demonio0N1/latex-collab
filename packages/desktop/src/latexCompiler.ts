@@ -32,6 +32,18 @@ export interface Watcher {
 }
 
 /**
+ * Keyed by absolute .tex path, independent of React's render/effect
+ * lifecycle. A component unmount's cleanup calling `stop()` is not
+ * guaranteed to be awaited before the next mount's `startWatcher()` runs
+ * (React cleanup functions are fire-and-forget), so relying on effect
+ * timing alone let two `latexmk -pvc` processes end up watching the same
+ * file at once — they'd race writing the same .pdf/.aux/.log, and changes
+ * could stop reflecting in the preview. This registry makes "at most one
+ * watcher per file" a hard invariant instead of a timing accident.
+ */
+const activeWatchers = new Map<string, Watcher>();
+
+/**
  * Only "latexmk" is allowlisted in the Tauri shell scope (see
  * src-tauri/capabilities/default.json) — Tauri v2 requires every runnable
  * program to be declared ahead of time, arbitrary user-typed commands
@@ -45,6 +57,11 @@ export interface Watcher {
  * a naive "recompile from scratch each time" approach would.
  */
 export async function startWatcher(texFilePath: string, onLog: (chunk: string) => void): Promise<Watcher> {
+  const existing = activeWatchers.get(texFilePath);
+  if (existing) {
+    await existing.stop();
+  }
+
   const { dir, file } = splitDirAndFile(texFilePath);
   const engine = getEngine();
   const args = ["-pvc", "-view=none", engineFlag(engine), "-interaction=nonstopmode", "-f", file];
@@ -60,13 +77,18 @@ export async function startWatcher(texFilePath: string, onLog: (chunk: string) =
     onLog(`No se pudo iniciar latexmk: ${String(err instanceof Error ? err.message : err)}`);
   }
 
-  return {
+  const watcher: Watcher = {
     stop: async () => {
       try {
         await child?.kill();
       } catch {
         // already exited
       }
+      if (activeWatchers.get(texFilePath) === watcher) {
+        activeWatchers.delete(texFilePath);
+      }
     },
   };
+  activeWatchers.set(texFilePath, watcher);
+  return watcher;
 }

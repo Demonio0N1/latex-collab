@@ -40,10 +40,15 @@ Esto detecta tu sistema operativo e instala automáticamente lo que falte:
 - **Rust** (vía `rustup`) — necesario para compilar la app de escritorio (Tauri)
 - Las **librerías de sistema** que Tauri necesita (en Linux: `webkit2gtk` y
   compañía; en macOS: Xcode Command Line Tools)
-- Las **dependencias del proyecto** (`npm install`)
 - Opcionalmente **Tailscale**, con la opción de activar **Tailscale
   Funnel** automáticamente (para que los links de "Compartir" funcionen
   para cualquiera en internet, sin que instalen nada — ver más abajo)
+- Una **distribución LaTeX** (`latexmk`) si no encuentra una — la necesita
+  el botón "Vista previa PDF" para compilar (BasicTeX en macOS, TeX Live en
+  Linux). Si vas a usar Texifier/TeXmaker en vez de la vista previa
+  integrada, igual la vas a necesitar — esos editores también dependen de
+  tener esto instalado por separado, no traen su propio motor.
+- Las **dependencias del proyecto** (`npm install`)
 
 Se puede correr las veces que quieras sin romper nada: cada paso se salta
 solo si ya está instalado. Usa `./setup_latex.sh --yes` para saltarte todas
@@ -71,9 +76,8 @@ descarga dependencias. Las siguientes veces es casi instantáneo.
    insertar tablas, imágenes, fórmulas, listas, etc. sin memorizar la
    sintaxis de LaTeX.
 4. Botón **"Vista previa PDF"** si quieres ver el resultado compilado al
-   lado del editor en tiempo real (necesitas tener una distribución LaTeX
-   instalada aparte — TeX Live, MacTeX o MiKTeX — para que esto funcione;
-   `setup_latex.sh` no la instala, es un paso independiente).
+   lado del editor en tiempo real, usando la distribución LaTeX que
+   `setup_latex.sh` instaló (o la que ya tenías).
 5. Botón **"Compartir"** para invitar a alguien más — ver la sección de
    abajo.
 
@@ -102,6 +106,19 @@ descarga dependencias. Las siguientes veces es casi instantáneo.
 La primera vez que actives Funnel puede pedirte habilitar "HTTPS
 Certificates" en el [panel de DNS de Tailscale](https://login.tailscale.com/admin/dns)
 — es un ajuste de tu cuenta, una sola vez.
+
+## Abrir la app: ícono y comando de terminal
+
+- **Linux**: al instalar el `.deb` o integrar el `.AppImage`, la app aparece
+  con ícono en el menú de aplicaciones, y el comando `latex_collab` queda
+  disponible en cualquier terminal (el binario se llama así — ver
+  `mainBinaryName` en `tauri.conf.json`). No hace falta ningún paso extra.
+- **macOS**: la app ya se ve como ícono normal en Launchpad/Dock/Finder al
+  estar en `/Applications`. Para abrirla también escribiendo `latex_collab`
+  en la terminal, `setup_latex.sh` te ofrece crear ese comando (un pequeño
+  script en `$(brew --prefix)/bin` que hace `open -a "LaTeX Collab"`).
+  Verificado en esta sesión: compilar, registrar la app, y luego
+  `latex_collab` desde una terminal nueva la abre correctamente.
 
 ## Estructura del proyecto
 
@@ -152,9 +169,26 @@ Notas si vas a tocar el código:
 - El registro del esquema `latexcollab://` para links clicables está
   verificado en macOS; en Windows/Linux usa una ruta de código diferente
   (`register_all()` en tiempo de ejecución) que no se ha probado todavía.
+- "Vista previa PDF" tenía un bug real: si se cerraba/abría el panel o se
+  cambiaba de pestaña rápido, podían quedar **dos** procesos `latexmk -pvc`
+  vigilando el mismo archivo a la vez, compitiendo por escribir el mismo
+  PDF — eso podía hacer que los cambios dejaran de reflejarse. Corregido
+  con un registro que garantiza un solo vigilante activo por archivo.
+- El ícono de menú y el comando `latex_collab` en Linux dependen de
+  `tauri.conf.json` (`mainBinaryName`, `category`) — la configuración está
+  puesta, pero no se ha probado empaquetando de verdad en una máquina
+  Linux (solo se verificó en macOS).
+- La instalación automática de la distribución LaTeX en `setup_latex.sh`
+  está verificada en la ruta de "ya está instalado" (detección correcta);
+  la instalación desde cero de BasicTeX/TeX Live no se ha probado en vivo
+  todavía en ninguna plataforma.
 - No hay renombrar/crear/borrar archivos desde la interfaz (por ahora, solo
   vía importar `.zip` o editando la carpeta del proyecto directamente).
 - Sin control de versiones tipo Git integrado — puedes usar `git`
   externamente sobre la misma carpeta del proyecto si quieres historial.
 - Advertencia moderada de auditoría de `npm` en `vite`/`esbuild`: solo
   afecta al servidor de desarrollo (`vite dev`), no a la app empaquetada.
+
+## Licencia
+
+MIT — ver [LICENSE](./LICENSE).
