@@ -1,8 +1,10 @@
 import http from "node:http";
+import https from "node:https";
+import fs from "node:fs";
 import express from "express";
 import cors from "cors";
 import { WebSocketServer } from "ws";
-import { PORT } from "./config.js";
+import { PORT, HOST, TLS_CERT_PATH, TLS_KEY_PATH } from "./config.js";
 import { router as projectsRouter } from "./projects.js";
 import { openRouter } from "./openLanding.js";
 import { getProject } from "./db.js";
@@ -17,7 +19,16 @@ app.use("/api", projectsRouter);
 app.use(openRouter);
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-const server = http.createServer(app);
+// Serve HTTPS directly when a cert+key are configured (e.g. a VPS with a
+// Let's Encrypt cert); otherwise plain HTTP (fine on loopback, or behind
+// Tailscale Funnel / a reverse proxy that terminates TLS for us).
+const tls = TLS_CERT_PATH && TLS_KEY_PATH;
+const server = tls
+  ? https.createServer(
+      { cert: fs.readFileSync(TLS_CERT_PATH), key: fs.readFileSync(TLS_KEY_PATH) },
+      app
+    )
+  : http.createServer(app);
 const wss = new WebSocketServer({ noServer: true });
 
 // WS URL shape: /ws/<projectId>/<urlencoded relative file path>
@@ -56,6 +67,8 @@ server.on("upgrade", (request, socket, head) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`latex-collab server listening on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  const scheme = tls ? "https" : "http";
+  const shown = HOST === "0.0.0.0" || HOST === "::" ? "localhost" : HOST;
+  console.log(`latex-collab server listening on ${scheme}://${shown}:${PORT} (bind ${HOST})`);
 });

@@ -16,7 +16,6 @@ import { wrapSelection, insertTemplate } from "../codeMirrorSnippets";
 import EditorToolbar from "./EditorToolbar";
 
 interface EditorProps {
-  wsUrl: string;
   baseUrl: string;
   projectId: string;
   projectName: string;
@@ -38,7 +37,6 @@ const MIRROR_DEBOUNCE_MS = 800;
  * updates up to the shared header/status bar.
  */
 export default function Editor({
-  wsUrl,
   baseUrl,
   projectId,
   projectName,
@@ -72,6 +70,10 @@ export default function Editor({
 
     const ydoc = new Y.Doc();
     const roomName = `ws/${projectId}/${encodeURIComponent(filePath)}`;
+    // Derive the ws origin from baseUrl (http→ws, https→wss) rather than
+    // trusting the server's advertised wsUrl, whose host/port/scheme is wrong
+    // when reached via Tailscale Funnel or direct TLS. Same rule as iOS.
+    const wsUrl = baseUrl.replace(/^http/, "ws");
     const provider = new WebsocketProvider(wsUrl, roomName, ydoc, {
       params: { token },
     });
@@ -137,7 +139,7 @@ export default function Editor({
       ydoc.destroy();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wsUrl, projectId, projectName, filePath, token, userName]);
+  }, [baseUrl, projectId, projectName, filePath, token, userName]);
 
   function withView(fn: (view: EditorView) => void) {
     const view = viewRef.current;

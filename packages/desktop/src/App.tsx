@@ -217,7 +217,6 @@ export default function App() {
                 {openFiles.map((file) => (
                   <Editor
                     key={file}
-                    wsUrl={session.wsUrl}
                     baseUrl={session.baseUrl}
                     projectId={session.project.id}
                     projectName={session.project.name}

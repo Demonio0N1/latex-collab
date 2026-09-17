@@ -101,11 +101,35 @@ descarga dependencias. Las siguientes veces es casi instantáneo.
 |---|---|---|
 | **Tailscale Funnel** (recomendado) | Nada — ni cuenta ni instalar Tailscale | Automático desde `setup_latex.sh`, o `tailscale funnel --bg 5959` a mano |
 | **Tailscale sin Funnel** | Su propia cuenta de Tailscale (cualquier proveedor) | Tú compartes solo tu máquina desde [el panel de Tailscale](https://login.tailscale.com/admin/machines) → *Share* |
-| **Sin Tailscale** | Nada, pero expone tu servidor a internet sin cifrado | Port forwarding + tu IP pública, o alojar en un VPS |
+| **Sin Tailscale** | Nada; expones tu servidor a internet (usa TLS y contraseña de creación — ver abajo) | Alojar en un VPS con `LATEX_COLLAB_TLS_CERT/KEY` (https/wss directo), o port forwarding + tu IP pública |
 
 La primera vez que actives Funnel puede pedirte habilitar "HTTPS
 Certificates" en el [panel de DNS de Tailscale](https://login.tailscale.com/admin/dns)
 — es un ajuste de tu cuenta, una sola vez.
+
+## Seguridad y variables de entorno del servidor
+
+Por defecto el servidor es privado y no queda expuesto a tu red local: solo
+responde en `localhost` (y a través de Tailscale Funnel, que reenvía a
+`127.0.0.1`). Para abrirlo más, ponlo detrás de TLS, o protegerlo si lo
+expones, usa estas variables de entorno al arrancar el servidor:
+
+| Variable | Por defecto | Para qué sirve |
+|---|---|---|
+| `LATEX_COLLAB_HOST` | `127.0.0.1` | Dirección de escucha. `0.0.0.0` para aceptar conexiones de tu Wi-Fi/LAN o de tu IP de Tailscale; una IP concreta para una sola interfaz. Déjalo por defecto si compartes solo con Funnel. |
+| `LATEX_COLLAB_CREATE_PASSWORD` | *(vacío)* | Si lo defines, **crear** proyectos desde otra máquina exige la cabecera `x-create-password` con ese valor (crear desde la propia máquina del servidor siempre está permitido, así no te bloqueas a ti mismo). Úsalo cuando expongas el servidor para que un desconocido no pueda crear proyectos y llenarte el disco. Vacío = abierto (cómodo para uso privado). |
+| `LATEX_COLLAB_TLS_CERT` / `LATEX_COLLAB_TLS_KEY` | *(vacío)* | Rutas a un certificado y su clave (p. ej. Let's Encrypt). Si defines **ambas**, el servidor sirve `https`/`wss` directamente — ideal para un VPS sin Funnel. Si no, sirve `http` plano (correcto en loopback o detrás de un proxy/Funnel que termina TLS). |
+
+Además, los endpoints sensibles ya vienen protegidos sin configurar nada:
+
+- **Autenticación por token**: leer/escribir archivos de un proyecto exige el
+  token de sesión que entrega `/join` (que a su vez verifica la contraseña).
+- **Límite de intentos** (rate limiting): `/join` se corta tras 12 intentos
+  por IP y proyecto cada 5 min (frena adivinar contraseñas), y crear proyectos
+  se corta tras 30 por IP cada hora. Detrás de un proxy/Funnel se usa la IP
+  real de `X-Forwarded-For`.
+- **`/network-info`** (tus IPs de LAN) solo responde a peticiones realmente
+  locales, nunca a las que llegan reenviadas por Funnel o un proxy.
 
 ## Abrir la app: ícono y comando de terminal
 

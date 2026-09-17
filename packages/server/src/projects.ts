@@ -7,7 +7,8 @@ import AdmZip from "adm-zip";
 import bcrypt from "bcryptjs";
 import { customAlphabet } from "nanoid";
 import type { CreateProjectRequest, JoinProjectRequest } from "@latex-collab/shared";
-import { DATA_DIR, TEMPLATES_DIR, PORT } from "./config.js";
+import { DATA_DIR, TEMPLATES_DIR, PORT, CREATE_PASSWORD } from "./config.js";
+import { rateLimit, clientIp, isTrulyLocal } from "./rateLimit.js";
 import { insertProject, getProject } from "./db.js";
 import { scanProjectFiles, resolveSafePath } from "./fileTree.js";
 import { issueToken, verifyToken } from "./sessionTokens.js";
@@ -27,13 +28,23 @@ function requireProjectAuth(req: import("express").Request, res: import("express
   return false;
 }
 
-function isLoopback(req: import("express").Request): boolean {
-  const ip = req.socket.remoteAddress ?? "";
-  return ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1";
-}
-
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 12);
 const upload = multer({ dest: path.join(DATA_DIR, "_uploads") });
+
+// Throttle password guessing on join (per IP + project) and project-creation
+// spam (per IP).
+const joinLimiter = rateLimit({
+  windowMs: 5 * 60_000,
+  max: 12,
+  key: (req) => `${clientIp(req)}:${req.params.id}`,
+  message: "Demasiados intentos de contraseña. Espera unos minutos.",
+});
+const createLimiter = rateLimit({
+  windowMs: 60 * 60_000,
+  max: 30,
+  key: (req) => clientIp(req),
+  message: "Demasiados proyectos creados. Espera un momento.",
+});
 const fileUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 export const router = Router();
@@ -43,7 +54,15 @@ export const router = Router();
 // the server. Clients open a known project via /join (which checks the
 // password) and remember their own projects locally.
 
-router.post("/projects", async (req, res) => {
+router.post("/projects", createLimiter, async (req, res) => {
+  // Optional server-wide gate so an exposed server can't be used by
+  // strangers to create projects. Off by default (private self-host). The
+  // local operator (same machine as the server) is always allowed, so setting
+  // it doesn't lock you out of your own desktop app; only remote callers must
+  // send the matching x-create-password header.
+  if (CREATE_PASSWORD && !isTrulyLocal(req) && req.headers["x-create-password"] !== CREATE_PASSWORD) {
+    return res.status(401).json({ error: "server requires a create password" });
+  }
   const body = req.body as CreateProjectRequest;
   if (!body.name || !body.password) {
     return res.status(400).json({ error: "name and password are required" });
@@ -75,7 +94,7 @@ router.post("/projects", async (req, res) => {
   res.json({ project: { id, name: body.name, createdAt } });
 });
 
-router.post("/projects/:id/join", async (req, res) => {
+router.post("/projects/:id/join", joinLimiter, async (req, res) => {
   const { id } = req.params;
   const body = req.body as JoinProjectRequest;
   const project = getProject(id);
@@ -86,10 +105,16 @@ router.post("/projects/:id/join", async (req, res) => {
 
   const files = scanProjectFiles(project.root_path);
   const token = issueToken(project.id);
+  // Advisory only — clients derive the ws origin from their own baseUrl. Still,
+  // report the right scheme: https via direct TLS (req.secure) or a
+  // TLS-terminating proxy/Funnel that sets X-Forwarded-Proto.
+  const xfProto = req.headers["x-forwarded-proto"];
+  const proto = (Array.isArray(xfProto) ? xfProto[0] : xfProto)?.split(",")[0].trim();
+  const secure = proto === "https" || req.secure;
   res.json({
     project: { id: project.id, name: project.name, createdAt: project.created_at },
     files,
-    wsUrl: `ws://${req.hostname}:${PORT}`,
+    wsUrl: `${secure ? "wss" : "ws"}://${req.hostname}:${PORT}`,
     token,
   });
 });
@@ -166,7 +191,7 @@ router.get("/projects/:id/files/download", (req, res) => {
 router.get("/network-info", async (req, res) => {
   // Only the host itself needs this (the Share dialog runs on the same
   // machine as the server); a remote client shouldn't learn our LAN IPs.
-  if (!isLoopback(req)) return res.status(403).json({ error: "forbidden" });
+  if (!isTrulyLocal(req)) return res.status(403).json({ error: "forbidden" });
   const addresses: string[] = [];
   for (const entries of Object.values(os.networkInterfaces())) {
     for (const entry of entries ?? []) {
