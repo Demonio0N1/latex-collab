@@ -68,10 +68,12 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
         template,
         rootPath: projectPath || undefined,
       });
+      // Join first to get the session token, which importArchive now requires.
+      let session = await joinProject(baseUrl, project.id, { password });
       if (importFile) {
-        await importArchive(baseUrl, project.id, importFile);
+        await importArchive(baseUrl, project.id, session.token, importFile);
+        session = await joinProject(baseUrl, project.id, { password }); // refresh file list
       }
-      const session = await joinProject(baseUrl, project.id, { password });
       onReady({ ...session, baseUrl, password });
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err));

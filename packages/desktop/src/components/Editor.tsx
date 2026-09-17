@@ -160,7 +160,7 @@ export default function Editor({
       const bytes = await readFile(picked);
       const fileName = picked.split(/[\\/]/).pop()!;
 
-      await uploadProjectFile(baseUrl, projectId, fileName, bytes);
+      await uploadProjectFile(baseUrl, projectId, token, fileName, bytes);
 
       const dir = localPath.slice(0, Math.max(localPath.lastIndexOf("/"), localPath.lastIndexOf("\\")));
       await writeMirrorBinary(`${dir}/${fileName}`, bytes);

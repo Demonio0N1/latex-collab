@@ -4,7 +4,6 @@ import type {
   JoinProjectRequest,
   JoinProjectResponse,
   ProjectFile,
-  ProjectSummary,
 } from "@latex-collab/shared";
 
 export class ApiError extends Error {}
@@ -36,10 +35,6 @@ export function getNetworkInfo(baseUrl: string): Promise<NetworkInfo> {
   return request(baseUrl, "/api/network-info");
 }
 
-export function listProjects(baseUrl: string): Promise<{ projects: ProjectSummary[] }> {
-  return request(baseUrl, "/api/projects");
-}
-
 export function createProject(
   baseUrl: string,
   body: CreateProjectRequest
@@ -58,37 +53,51 @@ export function joinProject(
   });
 }
 
-export async function importArchive(baseUrl: string, projectId: string, file: File): Promise<void> {
+// The file endpoints below require the session token (from joinProject) —
+// the server rejects unauthenticated file reads/writes.
+function authHeader(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function importArchive(baseUrl: string, projectId: string, token: string, file: File): Promise<void> {
   const form = new FormData();
   form.append("archive", file);
   const res = await fetch(`${baseUrl}/api/projects/${projectId}/import`, {
     method: "POST",
+    headers: authHeader(token),
     body: form,
   });
   if (!res.ok) throw new ApiError(`Import failed (${res.status})`);
 }
 
-export function listProjectFiles(baseUrl: string, projectId: string): Promise<{ files: ProjectFile[] }> {
-  return request(baseUrl, `/api/projects/${projectId}/files`);
+export function listProjectFiles(baseUrl: string, projectId: string, token: string): Promise<{ files: ProjectFile[] }> {
+  return request(baseUrl, `/api/projects/${projectId}/files`, { headers: authHeader(token) });
 }
 
 /** Uploads a binary file (e.g. an image inserted from the toolbar) into the project at `relativePath`. */
 export async function uploadProjectFile(
   baseUrl: string,
   projectId: string,
+  token: string,
   relativePath: string,
   bytes: Uint8Array
 ): Promise<{ files: ProjectFile[] }> {
   const form = new FormData();
   form.append("path", relativePath);
   form.append("file", new Blob([new Uint8Array(bytes)]), relativePath.split("/").pop());
-  const res = await fetch(`${baseUrl}/api/projects/${projectId}/files/upload`, { method: "POST", body: form });
+  const res = await fetch(`${baseUrl}/api/projects/${projectId}/files/upload`, {
+    method: "POST",
+    headers: authHeader(token),
+    body: form,
+  });
   if (!res.ok) throw new ApiError(`Upload failed (${res.status})`);
   return res.json();
 }
 
-export async function downloadProjectFile(baseUrl: string, projectId: string, relativePath: string): Promise<Uint8Array> {
-  const res = await fetch(`${baseUrl}/api/projects/${projectId}/files/download?path=${encodeURIComponent(relativePath)}`);
+export async function downloadProjectFile(baseUrl: string, projectId: string, token: string, relativePath: string): Promise<Uint8Array> {
+  const res = await fetch(`${baseUrl}/api/projects/${projectId}/files/download?path=${encodeURIComponent(relativePath)}`, {
+    headers: authHeader(token),
+  });
   if (!res.ok) throw new ApiError(`Download failed (${res.status})`);
   return new Uint8Array(await res.arrayBuffer());
 }

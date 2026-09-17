@@ -8,10 +8,29 @@ import bcrypt from "bcryptjs";
 import { customAlphabet } from "nanoid";
 import type { CreateProjectRequest, JoinProjectRequest } from "@latex-collab/shared";
 import { DATA_DIR, TEMPLATES_DIR, PORT } from "./config.js";
-import { insertProject, getProject, listProjects } from "./db.js";
+import { insertProject, getProject } from "./db.js";
 import { scanProjectFiles, resolveSafePath } from "./fileTree.js";
-import { issueToken } from "./sessionTokens.js";
+import { issueToken, verifyToken } from "./sessionTokens.js";
 import { detectTailscaleFunnelUrl } from "./tailscale.js";
+
+/** Bearer token (from /join) via Authorization header or ?token= query. */
+function tokenFromReq(req: import("express").Request): string | null {
+  const auth = req.headers.authorization;
+  if (auth?.startsWith("Bearer ")) return auth.slice("Bearer ".length);
+  return typeof req.query.token === "string" ? req.query.token : null;
+}
+
+/** Rejects the request unless it carries a valid session token for the project. */
+function requireProjectAuth(req: import("express").Request, res: import("express").Response, projectId: string): boolean {
+  if (verifyToken(tokenFromReq(req), projectId)) return true;
+  res.status(401).json({ error: "unauthorized" });
+  return false;
+}
+
+function isLoopback(req: import("express").Request): boolean {
+  const ip = req.socket.remoteAddress ?? "";
+  return ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1";
+}
 
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 12);
 const upload = multer({ dest: path.join(DATA_DIR, "_uploads") });
@@ -19,9 +38,10 @@ const fileUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize:
 
 export const router = Router();
 
-router.get("/projects", (_req, res) => {
-  res.json({ projects: listProjects().map(({ id, name, created_at }) => ({ id, name, createdAt: created_at })) });
-});
+// Note: there is deliberately no unauthenticated "list all projects"
+// endpoint — it would leak every project's id/name to anyone who can reach
+// the server. Clients open a known project via /join (which checks the
+// password) and remember their own projects locally.
 
 router.post("/projects", async (req, res) => {
   const body = req.body as CreateProjectRequest;
@@ -76,6 +96,7 @@ router.post("/projects/:id/join", async (req, res) => {
 
 router.post("/projects/:id/import", upload.single("archive"), async (req, res) => {
   const { id } = req.params;
+  if (!requireProjectAuth(req, res, id)) return;
   const project = getProject(id);
   if (!project) return res.status(404).json({ error: "project not found" });
   if (!req.file) return res.status(400).json({ error: "archive file is required" });
@@ -88,6 +109,7 @@ router.post("/projects/:id/import", upload.single("archive"), async (req, res) =
 });
 
 router.get("/projects/:id/files", (req, res) => {
+  if (!requireProjectAuth(req, res, req.params.id)) return;
   const project = getProject(req.params.id);
   if (!project) return res.status(404).json({ error: "project not found" });
   res.json({ files: scanProjectFiles(project.root_path) });
@@ -99,6 +121,7 @@ router.get("/projects/:id/files", (req, res) => {
  * so every collaborator's `\includegraphics{...}` resolves the same file.
  */
 router.post("/projects/:id/files/upload", fileUpload.single("file"), (req, res) => {
+  if (!requireProjectAuth(req, res, req.params.id)) return;
   const project = getProject(req.params.id);
   if (!project) return res.status(404).json({ error: "project not found" });
   if (!req.file) return res.status(400).json({ error: "file is required" });
@@ -118,6 +141,7 @@ router.post("/projects/:id/files/upload", fileUpload.single("file"), (req, res) 
 
 /** Downloads a single project file's raw bytes (used to fetch images other collaborators added). */
 router.get("/projects/:id/files/download", (req, res) => {
+  if (!requireProjectAuth(req, res, req.params.id)) return;
   const project = getProject(req.params.id);
   if (!project) return res.status(404).json({ error: "project not found" });
 
@@ -139,7 +163,10 @@ router.get("/projects/:id/files/download", (req, res) => {
  * "localhost" only works from the same machine, so the Share dialog needs
  * a real LAN (or VPN) address to build a usable link/host.
  */
-router.get("/network-info", async (_req, res) => {
+router.get("/network-info", async (req, res) => {
+  // Only the host itself needs this (the Share dialog runs on the same
+  // machine as the server); a remote client shouldn't learn our LAN IPs.
+  if (!isLoopback(req)) return res.status(403).json({ error: "forbidden" });
   const addresses: string[] = [];
   for (const entries of Object.values(os.networkInterfaces())) {
     for (const entry of entries ?? []) {

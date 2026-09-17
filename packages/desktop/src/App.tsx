@@ -108,7 +108,7 @@ export default function App() {
     const syncFiles = async () => {
       let latest: ProjectFile[];
       try {
-        latest = (await listProjectFiles(session.baseUrl, session.project.id)).files;
+        latest = (await listProjectFiles(session.baseUrl, session.project.id, session.token)).files;
       } catch {
         return; // transient network hiccup — try again next tick
       }
@@ -123,7 +123,7 @@ export default function App() {
         const localPath = await joinPath(projectDir, file.path);
         if (await mirrorFileExists(localPath)) continue;
         try {
-          const bytes = await downloadProjectFile(session.baseUrl, session.project.id, file.path);
+          const bytes = await downloadProjectFile(session.baseUrl, session.project.id, session.token, file.path);
           if (stopped) return;
           await writeMirrorBinary(localPath, bytes);
         } catch (err) {
