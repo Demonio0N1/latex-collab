@@ -1,4 +1,7 @@
 import type { RecentProject } from "../recentProjects";
+import { BrandMark } from "./BrandMark";
+import { initials } from "../avatar";
+import { randomColor } from "@latex-collab/shared";
 
 interface SidebarProps {
   recentProjects: RecentProject[];
@@ -20,7 +23,7 @@ export default function Sidebar({
   return (
     <div className="sidebar">
       <div className="sidebar-brand">
-        <span className="brand-dot" />
+        <BrandMark size={22} />
         <span className="brand-name">LaTeX Collab</span>
       </div>
 
@@ -46,10 +49,15 @@ export default function Sidebar({
           const isLocal = /localhost|127\.0\.0\.1/.test(p.baseUrl);
           return (
             <div key={key} className={`sidebar-item ${key === activeKey ? "active" : ""}`} onClick={() => onOpenRecent(p)}>
-              <span className={`sidebar-item-dot ${isLocal ? "local" : "remote"}`} />
+              <span className="sidebar-item-avatar" style={{ background: randomColor(p.name) }}>
+                {initials(p.name)}
+              </span>
               <div className="sidebar-item-text">
                 <div className="sidebar-item-name">{p.name}</div>
-                <div className="sidebar-item-sub">{p.baseUrl.replace(/^https?:\/\//, "")}</div>
+                <div className="sidebar-item-sub">
+                  <span className={`sidebar-item-dot ${isLocal ? "local" : "remote"}`} />
+                  {p.baseUrl.replace(/^https?:\/\//, "")}
+                </div>
               </div>
               <button
                 className="sidebar-item-remove"

@@ -12,6 +12,7 @@ import StatusBar from "./components/StatusBar";
 import ShareDialog from "./components/ShareDialog";
 import Editor from "./components/Editor";
 import PdfPreview from "./components/PdfPreview";
+import WelcomeScreen from "./components/WelcomeScreen";
 import { joinProject, parseShareLink, listProjectFiles, downloadProjectFile } from "./api";
 import { listRecentProjects, removeRecentProject, upsertRecentProject, type RecentProject } from "./recentProjects";
 import { resolveProjectMirrorDir, mirrorFileExists, writeMirrorBinary } from "./localMirror";
@@ -180,10 +181,7 @@ export default function App() {
 
       <div className="main-column">
         {!session ? (
-          <div className="empty-state-full">
-            <h2>Ningún proyecto abierto</h2>
-            <p>Crea un proyecto nuevo o únete a uno existente desde el panel de la izquierda.</p>
-          </div>
+          <WelcomeScreen onNewProject={() => setShowNewModal(true)} onJoinProject={() => setShowJoinModal(true)} />
         ) : (
           <>
             <ProjectHeader
@@ -191,6 +189,8 @@ export default function App() {
               projectId={session.project.id}
               localFilePath={localFilePath}
               showPreview={showPreview}
+              peers={peers}
+              selfName={userName}
               onTogglePreview={() => setShowPreview((s) => !s)}
               onShare={() => setShowShare(true)}
             />

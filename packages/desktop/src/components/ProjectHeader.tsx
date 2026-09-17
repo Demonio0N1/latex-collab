@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { openPath } from "@tauri-apps/plugin-opener";
+import PresenceStack from "./PresenceStack";
 
 interface ProjectHeaderProps {
   projectName: string;
   projectId: string;
   localFilePath: string | null;
   showPreview: boolean;
+  peers: { name: string; color: string }[];
+  selfName: string;
   onTogglePreview: () => void;
   onShare: () => void;
 }
@@ -17,6 +20,8 @@ export default function ProjectHeader({
   projectId,
   localFilePath,
   showPreview,
+  peers,
+  selfName,
   onTogglePreview,
   onShare,
 }: ProjectHeaderProps) {
@@ -43,19 +48,21 @@ export default function ProjectHeader({
     <div className="project-header">
       <div className="project-header-title">
         <strong>{projectName}</strong>
-        <span className="project-id">{projectId}</span>
+        <span className="project-id" title="ID del proyecto">{projectId}</span>
       </div>
       <div className="project-header-actions">
+        <PresenceStack peers={peers} selfName={selfName} />
+        <span className="header-sep" />
         <button onClick={onTogglePreview} className={showPreview ? "active-toggle" : ""}>
-          {showPreview ? "Ocultar vista previa PDF" : "Vista previa PDF"}
+          {showPreview ? "Ocultar PDF" : "Vista previa PDF"}
         </button>
         <button onClick={handleOpen} disabled={!localFilePath} title={localFilePath ?? undefined}>
-          Abrir/compilar con mi programa
+          Abrir con…
         </button>
-        <button onClick={() => setShowSettings((s) => !s)} className="icon-button" title="Configurar programa">
-          ⚙️
+        <button onClick={() => setShowSettings((s) => !s)} className="icon-button" title="Configurar programa externo">
+          ⚙
         </button>
-        <button onClick={onShare}>Compartir</button>
+        <button className="btn-accent" onClick={onShare}>Compartir</button>
       </div>
       {showSettings && (
         <div className="settings-popover">
