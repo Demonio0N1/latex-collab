@@ -12,6 +12,16 @@ settingGroups:
     base:
       PRODUCT_NAME: LaTeX Collab
       PRODUCT_BUNDLE_IDENTIFIER: com.latexcollab.desktop
+      # Tauri's Rust build script writes libapp.a into gen/apple/Externals,
+      # outside DerivedData; Xcode's user-script sandbox denies that. Off.
+      ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+      # Signing (change DEVELOPMENT_TEAM to your own Apple Developer team).
+      DEVELOPMENT_TEAM: QJ2824WK6Q
+      CODE_SIGN_STYLE: Automatic
+      # Xcode 16+ debug builds ship a separate ".debug.dylib" meant to be
+      # launched with the debugger attached; tapping the icon standalone
+      # crashes with SIGTRAP. Off = a normal standalone-launchable app.
+      ENABLE_DEBUG_DYLIB: "NO"
 targetTemplates:
   app:
     type: application
@@ -83,7 +93,12 @@ targets:
       - sdk: UIKit.framework
       - sdk: WebKit.framework
     preBuildScripts:
-      - script: npm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
+      - script: |
+          # Xcode launched from the Dock has a minimal PATH without Homebrew's
+          # npm or ~/.cargo/bin, so the Rust build script fails with
+          # "npm: command not found". Make the toolchain discoverable.
+          export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+          npm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
         name: Build Rust Code
         basedOnDependencyAnalysis: false
         outputFiles:
