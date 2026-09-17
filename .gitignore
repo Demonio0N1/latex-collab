@@ -2,7 +2,15 @@ node_modules/
 dist/
 packages/server/dist/
 packages/desktop/src-tauri/target/
-packages/desktop/src-tauri/gen/
+packages/desktop/src-tauri/gen/schemas/
+
+# iOS: keep the generated Xcode project sources, drop build outputs
+packages/desktop/src-tauri/gen/apple/build/
+packages/desktop/src-tauri/gen/apple/Externals/
+packages/desktop/src-tauri/gen/apple/Pods/
+packages/desktop/src-tauri/gen/apple/*.xcworkspace/
+packages/desktop/src-tauri/gen/apple/**/xcuserdata/
+
 *.tsbuildinfo
 vite.config.d.ts
 vite.config.js

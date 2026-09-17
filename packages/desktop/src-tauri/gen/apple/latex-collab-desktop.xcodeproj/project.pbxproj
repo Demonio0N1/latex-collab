@@ -1,0 +1,487 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0F844E7F9ABC0EA26FDFDB16 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 79DEA6CB5D5E72810EEF28B5 /* Assets.xcassets */; };
+		11DE67A309FC0BDB75F1A552 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5D071D0ED75C70C2328B4DF /* UIKit.framework */; };
+		15336F796EE5580CC7F79533 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4C4BA8735564FA81EC5094A /* Metal.framework */; };
+		52DC601422475242EBE32466 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB4C67A490E619E8665AED10 /* CoreGraphics.framework */; };
+		5CDB3741890C54D8ACFCA288 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FF896403DA1E3F48CE0A452D /* LaunchScreen.storyboard */; };
+		6706A58756B3C19AEBA658C7 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FF0203DE08CD7EF7D995D /* main.mm */; };
+		6980776832377ECF72DABA02 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD75003ED38CEE1A01AF83C9 /* libapp.a */; };
+		7DCA91D590797C01144CE38E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40688832809BC72B8BCE6D32 /* MetalKit.framework */; };
+		B4A720BBD47AAC045779C629 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AECD2803C088A59A075482F0 /* Security.framework */; };
+		BDDFF5D517F9C5A8B568C37F /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 4B3CB2F18157508582B9838F /* assets */; };
+		D7AC229C6167264005C572DB /* libapp.a in Resources */ = {isa = PBXBuildFile; fileRef = 15C5B177A38474E56F2E3E0A /* libapp.a */; };
+		F31E574D9FC80BB272DFDAF9 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CF030E5DC17DF8AD2365907D /* QuartzCore.framework */; };
+		FA5CE51B83C5C72A07D968B5 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A68518919BAFA2C94315D63C /* WebKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		15C5B177A38474E56F2E3E0A /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		1E4FF0203DE08CD7EF7D995D /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		3607D7BCEA1A7D00B77726F4 /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
+		3A607F6E01C6559B547BB7B7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		40688832809BC72B8BCE6D32 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		4B3CB2F18157508582B9838F /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
+		4C01D89BAD1A826A29876FC6 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
+		79DEA6CB5D5E72810EEF28B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A68518919BAFA2C94315D63C /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		AECD2803C088A59A075482F0 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		B4C4BA8735564FA81EC5094A /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		CD75003ED38CEE1A01AF83C9 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		CF030E5DC17DF8AD2365907D /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		D5D071D0ED75C70C2328B4DF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		DD321B121A43807406C878C3 /* latex-collab-desktop_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "latex-collab-desktop_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EB4C67A490E619E8665AED10 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		F78A6575B023635A2428D087 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
+		FAC19206BDE08275229D9EA8 /* latex-collab-desktop_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "latex-collab-desktop_iOS.entitlements"; sourceTree = "<group>"; };
+		FF896403DA1E3F48CE0A452D /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4D7BF3976A91F49CD9096AC5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6980776832377ECF72DABA02 /* libapp.a in Frameworks */,
+				52DC601422475242EBE32466 /* CoreGraphics.framework in Frameworks */,
+				15336F796EE5580CC7F79533 /* Metal.framework in Frameworks */,
+				7DCA91D590797C01144CE38E /* MetalKit.framework in Frameworks */,
+				F31E574D9FC80BB272DFDAF9 /* QuartzCore.framework in Frameworks */,
+				B4A720BBD47AAC045779C629 /* Security.framework in Frameworks */,
+				11DE67A309FC0BDB75F1A552 /* UIKit.framework in Frameworks */,
+				FA5CE51B83C5C72A07D968B5 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0B67EBF8E5B5FABFA2F97E78 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				4C01D89BAD1A826A29876FC6 /* lib.rs */,
+				3607D7BCEA1A7D00B77726F4 /* main.rs */,
+			);
+			name = src;
+			path = ../../src;
+			sourceTree = "<group>";
+		};
+		19E24418759B747DA1612C9E /* latex-collab-desktop */ = {
+			isa = PBXGroup;
+			children = (
+				1E4FF0203DE08CD7EF7D995D /* main.mm */,
+				35BE26F39E8CA25AA8017C0D /* bindings */,
+			);
+			path = "latex-collab-desktop";
+			sourceTree = "<group>";
+		};
+		2AF50CFB0C0F86DC44D6D2DE /* latex-collab-desktop_iOS */ = {
+			isa = PBXGroup;
+			children = (
+				3A607F6E01C6559B547BB7B7 /* Info.plist */,
+				FAC19206BDE08275229D9EA8 /* latex-collab-desktop_iOS.entitlements */,
+			);
+			path = "latex-collab-desktop_iOS";
+			sourceTree = "<group>";
+		};
+		35BE26F39E8CA25AA8017C0D /* bindings */ = {
+			isa = PBXGroup;
+			children = (
+				F78A6575B023635A2428D087 /* bindings.h */,
+			);
+			path = bindings;
+			sourceTree = "<group>";
+		};
+		420C12E5BE814418A5A86F8B /* arm64 */ = {
+			isa = PBXGroup;
+			children = (
+				8A647852B15C517402C0DA8D /* debug */,
+			);
+			path = arm64;
+			sourceTree = "<group>";
+		};
+		4CBD61BC8F1DE7D4E0B99A13 = {
+			isa = PBXGroup;
+			children = (
+				4B3CB2F18157508582B9838F /* assets */,
+				79DEA6CB5D5E72810EEF28B5 /* Assets.xcassets */,
+				FF896403DA1E3F48CE0A452D /* LaunchScreen.storyboard */,
+				C1BD86E32868B1890BB9A41F /* Externals */,
+				2AF50CFB0C0F86DC44D6D2DE /* latex-collab-desktop_iOS */,
+				F8F5C0DD1552F1103AB5C467 /* Sources */,
+				0B67EBF8E5B5FABFA2F97E78 /* src */,
+				80729EF853651610DA77033D /* Frameworks */,
+				904CE591AF35E5014C93807A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		80729EF853651610DA77033D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EB4C67A490E619E8665AED10 /* CoreGraphics.framework */,
+				CD75003ED38CEE1A01AF83C9 /* libapp.a */,
+				B4C4BA8735564FA81EC5094A /* Metal.framework */,
+				40688832809BC72B8BCE6D32 /* MetalKit.framework */,
+				CF030E5DC17DF8AD2365907D /* QuartzCore.framework */,
+				AECD2803C088A59A075482F0 /* Security.framework */,
+				D5D071D0ED75C70C2328B4DF /* UIKit.framework */,
+				A68518919BAFA2C94315D63C /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8A647852B15C517402C0DA8D /* debug */ = {
+			isa = PBXGroup;
+			children = (
+				15C5B177A38474E56F2E3E0A /* libapp.a */,
+			);
+			path = debug;
+			sourceTree = "<group>";
+		};
+		904CE591AF35E5014C93807A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DD321B121A43807406C878C3 /* latex-collab-desktop_iOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C1BD86E32868B1890BB9A41F /* Externals */ = {
+			isa = PBXGroup;
+			children = (
+				420C12E5BE814418A5A86F8B /* arm64 */,
+			);
+			path = Externals;
+			sourceTree = "<group>";
+		};
+		F8F5C0DD1552F1103AB5C467 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				19E24418759B747DA1612C9E /* latex-collab-desktop */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		"TEMP_002D5ACB-78CA-4669-B0AC-811015328FAF" /* x86_64 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = x86_64;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A3A8DFAE34123BA7601BDBBF /* latex-collab-desktop_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 03928B8ABEEDF4C38BD7CD69 /* Build configuration list for PBXNativeTarget "latex-collab-desktop_iOS" */;
+			buildPhases = (
+				2DED47520C497743C78C28B7 /* Build Rust Code */,
+				60A438D4666F31F327F8C5D3 /* Sources */,
+				554B260BCF4009AF438BE30A /* Resources */,
+				4D7BF3976A91F49CD9096AC5 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "latex-collab-desktop_iOS";
+			packageProductDependencies = (
+			);
+			productName = "latex-collab-desktop_iOS";
+			productReference = DD321B121A43807406C878C3 /* latex-collab-desktop_iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A97755DE7A16F508045BE314 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 4E41C59EB675E9F094696406 /* Build configuration list for PBXProject "latex-collab-desktop" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 4CBD61BC8F1DE7D4E0B99A13;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 904CE591AF35E5014C93807A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A3A8DFAE34123BA7601BDBBF /* latex-collab-desktop_iOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		554B260BCF4009AF438BE30A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F844E7F9ABC0EA26FDFDB16 /* Assets.xcassets in Resources */,
+				5CDB3741890C54D8ACFCA288 /* LaunchScreen.storyboard in Resources */,
+				BDDFF5D517F9C5A8B568C37F /* assets in Resources */,
+				D7AC229C6167264005C572DB /* libapp.a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2DED47520C497743C78C28B7 /* Build Rust Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Rust Code";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a",
+				"$(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "npm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		60A438D4666F31F327F8C5D3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6706A58756B3C19AEBA658C7 /* main.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		227A09C4F7C330C9B909259C /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = debug;
+		};
+		B0ADE23D38EE99F9EA93B092 /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "latex-collab-desktop_iOS/latex-collab-desktop_iOS.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = "latex-collab-desktop_iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.latexcollab.desktop;
+				PRODUCT_NAME = "LaTeX Collab";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = release;
+		};
+		C26C1817E507F8D60F7F9E88 /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = release;
+		};
+		CB9DC1F66E9984168EC5B084 /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "latex-collab-desktop_iOS/latex-collab-desktop_iOS.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = "latex-collab-desktop_iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.latexcollab.desktop;
+				PRODUCT_NAME = "LaTeX Collab";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		03928B8ABEEDF4C38BD7CD69 /* Build configuration list for PBXNativeTarget "latex-collab-desktop_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CB9DC1F66E9984168EC5B084 /* debug */,
+				B0ADE23D38EE99F9EA93B092 /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+		4E41C59EB675E9F094696406 /* Build configuration list for PBXProject "latex-collab-desktop" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				227A09C4F7C330C9B909259C /* debug */,
+				C26C1817E507F8D60F7F9E88 /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A97755DE7A16F508045BE314 /* Project object */;
+}

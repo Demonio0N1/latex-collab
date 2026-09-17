@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { openPath } from "@tauri-apps/plugin-opener";
 import PresenceStack from "./PresenceStack";
+import { SUPPORTS_LOCAL_TOOLS } from "../platform";
 
 interface ProjectHeaderProps {
   projectName: string;
@@ -9,6 +10,8 @@ interface ProjectHeaderProps {
   showPreview: boolean;
   peers: { name: string; color: string }[];
   selfName: string;
+  onToggleNav?: () => void;
+  onTogglePeople?: () => void;
   onTogglePreview: () => void;
   onShare: () => void;
 }
@@ -22,6 +25,8 @@ export default function ProjectHeader({
   showPreview,
   peers,
   selfName,
+  onToggleNav,
+  onTogglePeople,
   onTogglePreview,
   onShare,
 }: ProjectHeaderProps) {
@@ -47,22 +52,36 @@ export default function ProjectHeader({
   return (
     <div className="project-header">
       <div className="project-header-title">
+        {onToggleNav && (
+          <button className="icon-button mobile-only nav-toggle" onClick={onToggleNav} title="Proyectos" aria-label="Proyectos">
+            ☰
+          </button>
+        )}
         <strong>{projectName}</strong>
         <span className="project-id" title="ID del proyecto">{projectId}</span>
       </div>
       <div className="project-header-actions">
         <PresenceStack peers={peers} selfName={selfName} />
         <span className="header-sep" />
-        <button onClick={onTogglePreview} className={showPreview ? "active-toggle" : ""}>
-          {showPreview ? "Ocultar PDF" : "Vista previa PDF"}
-        </button>
-        <button onClick={handleOpen} disabled={!localFilePath} title={localFilePath ?? undefined}>
-          Abrir con…
-        </button>
-        <button onClick={() => setShowSettings((s) => !s)} className="icon-button" title="Configurar programa externo">
-          ⚙
-        </button>
+        {SUPPORTS_LOCAL_TOOLS && (
+          <>
+            <button onClick={onTogglePreview} className={`desktop-only ${showPreview ? "active-toggle" : ""}`}>
+              {showPreview ? "Ocultar PDF" : "Vista previa PDF"}
+            </button>
+            <button className="desktop-only" onClick={handleOpen} disabled={!localFilePath} title={localFilePath ?? undefined}>
+              Abrir con…
+            </button>
+            <button onClick={() => setShowSettings((s) => !s)} className="icon-button desktop-only" title="Configurar programa externo">
+              ⚙
+            </button>
+          </>
+        )}
         <button className="btn-accent" onClick={onShare}>Compartir</button>
+        {onTogglePeople && (
+          <button className="icon-button mobile-only" onClick={onTogglePeople} title="Archivos y colaboradores" aria-label="Archivos y colaboradores">
+            ⋯
+          </button>
+        )}
       </div>
       {showSettings && (
         <div className="settings-popover">

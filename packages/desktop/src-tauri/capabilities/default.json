@@ -22,6 +22,7 @@
     "opener:allow-open-path",
     "opener:allow-open-url",
     "dialog:allow-open",
-    "deep-link:default"
+    "deep-link:default",
+    "os:default"
   ]
 }

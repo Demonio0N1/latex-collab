@@ -3,6 +3,7 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import type { JoinProjectResponse } from "@latex-collab/shared";
 import { createProject, importArchive, joinProject, listTemplates } from "../api";
 import { getDefaultLocationPref, setDefaultLocationPref, suggestProjectPath, type DefaultLocation } from "../projectPaths";
+import { SUPPORTS_LOCAL_TOOLS } from "../platform";
 
 const TEMPLATE_LABELS: Record<string, string> = {
   article: "Artículo",
@@ -36,7 +37,7 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
   }, [baseUrl]);
 
   useEffect(() => {
-    if (pathTouched) return;
+    if (!SUPPORTS_LOCAL_TOOLS || pathTouched) return;
     suggestProjectPath(name || "proyecto").then(setProjectPath);
   }, [name, location, pathTouched]);
 
@@ -105,26 +106,30 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
         <label>O importar un proyecto existente (.zip)</label>
         <input type="file" accept=".zip" onChange={(e) => setImportFile(e.target.files?.[0] ?? null)} />
 
-        <label>Guardar la carpeta del proyecto en</label>
-        <div className="location-toggle">
-          <button className={location === "documents" ? "active" : ""} onClick={() => changeLocation("documents")}>
-            Documentos
-          </button>
-          <button className={location === "desktop" ? "active" : ""} onClick={() => changeLocation("desktop")}>
-            Escritorio
-          </button>
-        </div>
-        <div className="copy-row">
-          <input
-            value={projectPath}
-            onChange={(e) => {
-              setProjectPath(e.target.value);
-              setPathTouched(true);
-            }}
-          />
-          <button onClick={browseFolder}>Elegir carpeta…</button>
-        </div>
-        <div className="hint">Por defecto crea "LaTeX Projects/{name || "proyecto"}" ahí. Puedes elegir otra carpeta.</div>
+        {SUPPORTS_LOCAL_TOOLS && (
+          <>
+            <label>Guardar la carpeta del proyecto en</label>
+            <div className="location-toggle">
+              <button className={location === "documents" ? "active" : ""} onClick={() => changeLocation("documents")}>
+                Documentos
+              </button>
+              <button className={location === "desktop" ? "active" : ""} onClick={() => changeLocation("desktop")}>
+                Escritorio
+              </button>
+            </div>
+            <div className="copy-row">
+              <input
+                value={projectPath}
+                onChange={(e) => {
+                  setProjectPath(e.target.value);
+                  setPathTouched(true);
+                }}
+              />
+              <button onClick={browseFolder}>Elegir carpeta…</button>
+            </div>
+            <div className="hint">Por defecto crea "LaTeX Projects/{name || "proyecto"}" ahí. Puedes elegir otra carpeta.</div>
+          </>
+        )}
 
         <button className="primary" disabled={busy} onClick={handleCreate}>
           {busy ? "Creando..." : "Crear proyecto"}

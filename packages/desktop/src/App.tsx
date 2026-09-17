@@ -38,6 +38,7 @@ export default function App() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [pendingLink, setPendingLink] = useState<{ link: string; error?: string } | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>(() => listRecentProjects());
+  const [mobileDrawer, setMobileDrawer] = useState<"none" | "nav" | "panel">("none");
 
   const [userName] = useState(() => {
     const existing = localStorage.getItem(USER_NAME_KEY);
@@ -169,15 +170,28 @@ export default function App() {
   const activeKey = session ? `${session.project.id}@${session.baseUrl}` : null;
 
   return (
-    <div className="shell">
-      <Sidebar
-        recentProjects={recentProjects}
-        activeKey={activeKey}
-        onNewProject={() => setShowNewModal(true)}
-        onJoinProject={() => setShowJoinModal(true)}
-        onOpenRecent={handleOpenRecent}
-        onRemoveRecent={handleRemoveRecent}
-      />
+    <div className={`shell ${session ? "has-session" : "no-session"}`} data-drawer={mobileDrawer}>
+      {mobileDrawer !== "none" && <div className="drawer-backdrop" onClick={() => setMobileDrawer("none")} />}
+
+      <div className={`drawer-nav ${mobileDrawer === "nav" ? "open" : ""}`}>
+        <Sidebar
+          recentProjects={recentProjects}
+          activeKey={activeKey}
+          onNewProject={() => {
+            setMobileDrawer("none");
+            setShowNewModal(true);
+          }}
+          onJoinProject={() => {
+            setMobileDrawer("none");
+            setShowJoinModal(true);
+          }}
+          onOpenRecent={(p) => {
+            setMobileDrawer("none");
+            handleOpenRecent(p);
+          }}
+          onRemoveRecent={handleRemoveRecent}
+        />
+      </div>
 
       <div className="main-column">
         {!session ? (
@@ -191,6 +205,8 @@ export default function App() {
               showPreview={showPreview}
               peers={peers}
               selfName={userName}
+              onToggleNav={() => setMobileDrawer((d) => (d === "nav" ? "none" : "nav"))}
+              onTogglePeople={() => setMobileDrawer((d) => (d === "panel" ? "none" : "panel"))}
               onTogglePreview={() => setShowPreview((s) => !s)}
               onShare={() => setShowShare(true)}
             />
@@ -215,8 +231,15 @@ export default function App() {
                 ))}
               </div>
               {showPreview && <PdfPreview texFilePath={localFilePath} />}
-              <div className="right-panel">
-                <FileTree files={files} activeFile={activeFile} onSelect={openFile} />
+              <div className={`right-panel drawer-panel ${mobileDrawer === "panel" ? "open" : ""}`}>
+                <FileTree
+                  files={files}
+                  activeFile={activeFile}
+                  onSelect={(p) => {
+                    setMobileDrawer("none");
+                    openFile(p);
+                  }}
+                />
                 <PresenceSidebar peers={peers} selfName={userName} />
               </div>
             </div>
