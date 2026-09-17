@@ -1,0 +1,48 @@
+name: LaTeXCollab
+options:
+  bundleIdPrefix: com.garyguaman
+  deploymentTarget:
+    iOS: "17.0"
+
+targets:
+  LaTeXCollab:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+        buildPhase: resources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: LaTeX Collab
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # The app connects to self-hosted servers over plain http/ws
+        # (localhost, LAN, or a user-provided host), so arbitrary loads are
+        # required. Justified to Apple as "connects to user-specified servers".
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        CFBundleURLTypes:
+          - CFBundleURLName: com.garyguaman.latexcollab
+            CFBundleURLSchemes: [latexcollab]
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "5.9"
+        PRODUCT_BUNDLE_IDENTIFIER: com.garyguaman.latexcollab
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: QJ2824WK6Q
+        # Xcode 16+ debug builds ship a separate ".debug.dylib" meant to run
+        # with the debugger attached; tapping the icon standalone SIGTRAPs.
+        ENABLE_DEBUG_DYLIB: "NO"

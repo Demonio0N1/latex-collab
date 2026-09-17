@@ -17,3 +17,8 @@ vite.config.js
 *.sqlite
 *.log
 .DS_Store
+
+# native iOS app (Swift) build artifacts
+ios/build/
+ios/build-device/
+ios/**/xcuserdata/

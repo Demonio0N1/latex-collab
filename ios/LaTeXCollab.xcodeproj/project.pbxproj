@@ -1,0 +1,357 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		25C0BC44702E7A50D1B01A9C /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76366A0F2E8677CD87A41452 /* Models.swift */; };
+		27ECB410D6986675D4DC9247 /* NewProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A727AA06955904FA0B807887 /* NewProjectView.swift */; };
+		30CC9AE0943F4991282F7015 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A603C6B537052411745FFAF /* Theme.swift */; };
+		32279722CE89B516C5E8FDC9 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620EFE282944496118505F59 /* EditorView.swift */; };
+		36ACE2AE4B068050CC6099B6 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = C592AEB65FF9DB95744497A1 /* Store.swift */; };
+		592D00E449DA0E052AEF555C /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1E41626C6F5B96620B0FCF /* RootView.swift */; };
+		C4130320624A2A64F58D609D /* Api.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47508C96D3BDAAF7EF26A7ED /* Api.swift */; };
+		C5B4F6A64580745FD20EE1A0 /* CollabSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55EE541D42DD792FF7787078 /* CollabSession.swift */; };
+		E33B4C007E7088E24AD95D18 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406BE624A35701B9621D8989 /* App.swift */; };
+		E6ED4252AFF2AA27434B6BDE /* yjs-bridge.js in Resources */ = {isa = PBXBuildFile; fileRef = 72216B0450A9B1A2866F794B /* yjs-bridge.js */; };
+		E73CDB67FE31F8E73CB43E03 /* JoinProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C81B64DFC1BB17F7E992577 /* JoinProjectView.swift */; };
+		F7F93E8CAB1E164CF6DEE287 /* YEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7A4915DB7086113B788F42 /* YEngine.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0A5C03E80E3FD059A4F5318F /* LaTeXCollab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LaTeXCollab.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		406BE624A35701B9621D8989 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		47508C96D3BDAAF7EF26A7ED /* Api.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Api.swift; sourceTree = "<group>"; };
+		4B1E41626C6F5B96620B0FCF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		55EE541D42DD792FF7787078 /* CollabSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollabSession.swift; sourceTree = "<group>"; };
+		5C81B64DFC1BB17F7E992577 /* JoinProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinProjectView.swift; sourceTree = "<group>"; };
+		620EFE282944496118505F59 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		72216B0450A9B1A2866F794B /* yjs-bridge.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "yjs-bridge.js"; sourceTree = "<group>"; };
+		76366A0F2E8677CD87A41452 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		7A603C6B537052411745FFAF /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A727AA06955904FA0B807887 /* NewProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewProjectView.swift; sourceTree = "<group>"; };
+		C592AEB65FF9DB95744497A1 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		ED7A4915DB7086113B788F42 /* YEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YEngine.swift; sourceTree = "<group>"; };
+		FED58985B2566707CDD99ADB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		013A5B62CEC3F4084AB063FF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0A5C03E80E3FD059A4F5318F /* LaTeXCollab.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0505C43212A665D2ABAF1D25 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				72216B0450A9B1A2866F794B /* yjs-bridge.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		298D4A9A969DEBF4A0F2B8FA = {
+			isa = PBXGroup;
+			children = (
+				0505C43212A665D2ABAF1D25 /* Resources */,
+				C7D6C60630325B97A86F5759 /* Sources */,
+				013A5B62CEC3F4084AB063FF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C7D6C60630325B97A86F5759 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				47508C96D3BDAAF7EF26A7ED /* Api.swift */,
+				406BE624A35701B9621D8989 /* App.swift */,
+				55EE541D42DD792FF7787078 /* CollabSession.swift */,
+				620EFE282944496118505F59 /* EditorView.swift */,
+				FED58985B2566707CDD99ADB /* Info.plist */,
+				5C81B64DFC1BB17F7E992577 /* JoinProjectView.swift */,
+				76366A0F2E8677CD87A41452 /* Models.swift */,
+				A727AA06955904FA0B807887 /* NewProjectView.swift */,
+				4B1E41626C6F5B96620B0FCF /* RootView.swift */,
+				C592AEB65FF9DB95744497A1 /* Store.swift */,
+				7A603C6B537052411745FFAF /* Theme.swift */,
+				ED7A4915DB7086113B788F42 /* YEngine.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6327C96E12EAE53A2A78F5FA /* LaTeXCollab */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E5F013E5B69749C4CC83DDB8 /* Build configuration list for PBXNativeTarget "LaTeXCollab" */;
+			buildPhases = (
+				C5F58FE3BE0765268E4E9F8D /* Sources */,
+				EC41E03244120EE1EE4B9871 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LaTeXCollab;
+			packageProductDependencies = (
+			);
+			productName = LaTeXCollab;
+			productReference = 0A5C03E80E3FD059A4F5318F /* LaTeXCollab.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2D4FDACF10C18A81E48E633F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					6327C96E12EAE53A2A78F5FA = {
+						DevelopmentTeam = QJ2824WK6Q;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = C6B710FAD9C7819FC53E5103 /* Build configuration list for PBXProject "LaTeXCollab" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 298D4A9A969DEBF4A0F2B8FA;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 013A5B62CEC3F4084AB063FF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6327C96E12EAE53A2A78F5FA /* LaTeXCollab */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EC41E03244120EE1EE4B9871 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E6ED4252AFF2AA27434B6BDE /* yjs-bridge.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C5F58FE3BE0765268E4E9F8D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C4130320624A2A64F58D609D /* Api.swift in Sources */,
+				E33B4C007E7088E24AD95D18 /* App.swift in Sources */,
+				C5B4F6A64580745FD20EE1A0 /* CollabSession.swift in Sources */,
+				32279722CE89B516C5E8FDC9 /* EditorView.swift in Sources */,
+				E73CDB67FE31F8E73CB43E03 /* JoinProjectView.swift in Sources */,
+				25C0BC44702E7A50D1B01A9C /* Models.swift in Sources */,
+				27ECB410D6986675D4DC9247 /* NewProjectView.swift in Sources */,
+				592D00E449DA0E052AEF555C /* RootView.swift in Sources */,
+				36ACE2AE4B068050CC6099B6 /* Store.swift in Sources */,
+				30CC9AE0943F4991282F7015 /* Theme.swift in Sources */,
+				F7F93E8CAB1E164CF6DEE287 /* YEngine.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		00E15B554616A94B97850584 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QJ2824WK6Q;
+				ENABLE_DEBUG_DYLIB = NO;
+				INFOPLIST_FILE = Sources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.garyguaman.latexcollab;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		6618631A368A12DB96108838 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QJ2824WK6Q;
+				ENABLE_DEBUG_DYLIB = NO;
+				INFOPLIST_FILE = Sources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.garyguaman.latexcollab;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		66E550D334E9A0024964DEF3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C0509C628A6DC5F0FBC017AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C6B710FAD9C7819FC53E5103 /* Build configuration list for PBXProject "LaTeXCollab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0509C628A6DC5F0FBC017AE /* Debug */,
+				66E550D334E9A0024964DEF3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E5F013E5B69749C4CC83DDB8 /* Build configuration list for PBXNativeTarget "LaTeXCollab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6618631A368A12DB96108838 /* Debug */,
+				00E15B554616A94B97850584 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2D4FDACF10C18A81E48E633F /* Project object */;
+}
