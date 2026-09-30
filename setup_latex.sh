@@ -7,9 +7,15 @@
 # necesita, las dependencias del monorepo (npm install), y opcionalmente
 # Tailscale (para compartir proyectos fuera de tu red local).
 #
+# Al iniciar pregunta qué instalar:
+#   1) Servidor — aloja los proyectos 24/7 (ej. una Raspberry Pi), sin app.
+#   2) App      — para editar; se conecta al servidor y crea/comparte proyectos.
+#
 # Uso:
 #   chmod +x setup_latex.sh
-#   ./setup_latex.sh
+#   ./setup_latex.sh            # pregunta servidor/app
+#   ./setup_latex.sh --server   # fuerza modo servidor
+#   ./setup_latex.sh --full     # fuerza modo app (instalación completa)
 #
 # Se puede correr varias veces sin problema: cada paso se salta solo si ya
 # está instalado.
@@ -56,15 +62,29 @@ is_raspberry_pi() {
     || grep -qi "raspberry pi" /sys/firmware/devicetree/base/model 2>/dev/null
 }
 
-# Sin flag: en una Raspberry Pi lo normal es instalar SOLO el servidor
-# (headless, sin compilar la app de escritorio). En lo demás, instalación completa.
+# Sin flag: preguntar explícitamente qué instalar. En una Raspberry Pi la
+# opción sugerida es el servidor; en Mac/Linux de escritorio, la app.
 if [ -z "$MODE" ]; then
-  MODE=full
+  default_choice=2
   if [ "$PLATFORM" = "linux" ] && is_raspberry_pi; then
     info "Detecté una Raspberry Pi."
-    if ask_yes "¿Instalar solo el SERVIDOR de colaboración? (recomendado en Raspberry: sin compilar la app de escritorio)"; then
-      MODE=server
-    fi
+    default_choice=1
+  fi
+
+  if [ "${AUTO_YES:-0}" = "1" ]; then
+    [ "$default_choice" = "1" ] && MODE=server || MODE=full
+  else
+    echo -e "${BOLD}¿Qué quieres instalar en esta máquina?${NC}"
+    echo "  1) Servidor  — aloja los proyectos 24/7 (ej. una Raspberry Pi). Sin app de escritorio."
+    echo "  2) App       — para editar: se conecta a un servidor (tu Raspberry) y crea/comparte proyectos."
+    read -rp "Elige [1/2] (por defecto $default_choice): " choice
+    choice=${choice:-$default_choice}
+    case "$choice" in
+      1) MODE=server ;;
+      2) MODE=full ;;
+      *) [ "$default_choice" = "1" ] && MODE=server || MODE=full ;;
+    esac
+    echo
   fi
 fi
 
