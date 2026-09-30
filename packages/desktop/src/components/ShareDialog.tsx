@@ -10,6 +10,9 @@ interface ShareDialogProps {
 
 const SHARE_HOST_KEY = "latex-collab:shareHost";
 const isLoopback = (url: string) => /localhost|127\.0\.0\.1/.test(url);
+// An https, non-loopback server (Tailscale Funnel or a TLS/VPS host) is already
+// reachable from anywhere on the internet — the link is public as-is.
+const looksPublic = (url: string) => /^https:\/\//.test(url) && !isLoopback(url);
 
 export default function ShareDialog({ baseUrl, projectId, password, onClose }: ShareDialogProps) {
   const [copied, setCopied] = useState<string | null>(null);
@@ -41,7 +44,7 @@ export default function ShareDialog({ baseUrl, projectId, password, onClose }: S
 
   const effectiveHost = shareHost || baseUrl;
   const link = buildShareLink(effectiveHost, projectId, password);
-  const usingGlobalHost = suggestions.some((s) => s.host === effectiveHost && s.global);
+  const usingGlobalHost = looksPublic(effectiveHost) || suggestions.some((s) => s.host === effectiveHost && s.global);
 
   async function copy(label: string, value: string) {
     await navigator.clipboard.writeText(value);
@@ -54,6 +57,14 @@ export default function ShareDialog({ baseUrl, projectId, password, onClose }: S
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h3>Compartir proyecto</h3>
         <p>Envía cualquiera de estas dos opciones a la otra persona (WhatsApp, correo, Slack...):</p>
+
+        {looksPublic(baseUrl) && (
+          <div className="hint">
+            🌐 Este proyecto está en un servidor público ({baseUrl.replace(/^https?:\/\//, "")}):
+            el link funciona para <strong>cualquier persona en internet</strong>, sin que instale
+            Tailscale ni nada extra.
+          </div>
+        )}
 
         {isLoopback(baseUrl) && (
           <>
