@@ -23,7 +23,16 @@ const FILE_POLL_MS = 4000;
 type Session = JoinProjectResponse & { baseUrl: string; password: string };
 
 const USER_NAME_KEY = "latex-collab:userName";
+const SERVER_URL_KEY = "latex-collab:serverUrl";
 const DEFAULT_BASE_URL = "http://localhost:5959";
+
+function loadServerUrl(): string {
+  try {
+    return localStorage.getItem(SERVER_URL_KEY) || DEFAULT_BASE_URL;
+  } catch {
+    return DEFAULT_BASE_URL;
+  }
+}
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -39,6 +48,20 @@ export default function App() {
   const [pendingLink, setPendingLink] = useState<{ link: string; error?: string } | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>(() => listRecentProjects());
   const [mobileDrawer, setMobileDrawer] = useState<"none" | "nav" | "panel">("none");
+  // Last server the user pointed at (e.g. the Raspberry Pi), remembered so
+  // both "new" and "join" default to it instead of always localhost.
+  const [serverUrl, setServerUrl] = useState<string>(() => loadServerUrl());
+
+  const rememberServer = useCallback((url: string) => {
+    const clean = url.trim().replace(/\/+$/, "");
+    if (!clean) return;
+    setServerUrl(clean);
+    try {
+      localStorage.setItem(SERVER_URL_KEY, clean);
+    } catch {
+      /* localStorage may be unavailable; ignore */
+    }
+  }, []);
 
   const [userName] = useState(() => {
     const existing = localStorage.getItem(USER_NAME_KEY);
@@ -61,6 +84,7 @@ export default function App() {
     setShowNewModal(false);
     setShowJoinModal(false);
 
+    rememberServer(newSession.baseUrl);
     upsertRecentProject({
       id: newSession.project.id,
       name: newSession.project.name,
@@ -248,11 +272,17 @@ export default function App() {
       </div>
 
       {showNewModal && (
-        <NewProjectModal baseUrl={DEFAULT_BASE_URL} onClose={() => setShowNewModal(false)} onReady={openSession} />
+        <NewProjectModal
+          baseUrl={serverUrl}
+          onServerChange={rememberServer}
+          onClose={() => setShowNewModal(false)}
+          onReady={openSession}
+        />
       )}
       {showJoinModal && (
         <JoinProjectModal
-          defaultBaseUrl={DEFAULT_BASE_URL}
+          defaultBaseUrl={serverUrl}
+          onServerChange={rememberServer}
           initialLink={pendingLink?.link}
           initialError={pendingLink?.error}
           onClose={() => {

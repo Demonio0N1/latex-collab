@@ -14,24 +14,22 @@ const TEMPLATE_LABELS: Record<string, string> = {
 
 interface NewProjectModalProps {
   baseUrl: string;
+  onServerChange?: (url: string) => void;
   onClose: () => void;
   onReady: (session: JoinProjectResponse & { baseUrl: string; password: string }) => void;
 }
 
-export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjectModalProps) {
+export default function NewProjectModal({ baseUrl, onServerChange, onClose, onReady }: NewProjectModalProps) {
   const [templates, setTemplates] = useState<string[]>([]);
+  // Which server to create the project on (e.g. your Raspberry Pi). Editable
+  // so you're not locked to localhost.
+  const [server, setServer] = useState(baseUrl);
   const [name, setName] = useState("");
   const [password, setPassword] = useState(() => Math.random().toString(36).slice(2, 10));
   // Optional server-wide create-password (for servers exposed via Funnel).
   // Remembered per server so the user types it once.
-  const createPwKey = `latex-collab:createpw:${baseUrl}`;
-  const [createPassword, setCreatePassword] = useState(() => {
-    try {
-      return localStorage.getItem(createPwKey) ?? "";
-    } catch {
-      return "";
-    }
-  });
+  const createPwKey = `latex-collab:createpw:${server.trim().replace(/\/+$/, "")}`;
+  const [createPassword, setCreatePassword] = useState("");
   const [template, setTemplate] = useState<string | undefined>(undefined);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [location, setLocation] = useState<DefaultLocation>(getDefaultLocationPref());
@@ -41,10 +39,19 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    listTemplates(baseUrl)
+    listTemplates(server)
       .then((r) => setTemplates(r.templates))
       .catch(() => setTemplates([]));
-  }, [baseUrl]);
+  }, [server]);
+
+  // Load the remembered create-password for whichever server is selected.
+  useEffect(() => {
+    try {
+      setCreatePassword(localStorage.getItem(createPwKey) ?? "");
+    } catch {
+      setCreatePassword("");
+    }
+  }, [createPwKey]);
 
   useEffect(() => {
     if (!SUPPORTS_LOCAL_TOOLS || pathTouched) return;
@@ -69,12 +76,17 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
       setError("Nombre y contraseña son obligatorios.");
       return;
     }
+    const cleanServer = server.trim().replace(/\/+$/, "");
+    if (!cleanServer) {
+      setError("El servidor es obligatorio.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
       const trimmedCreatePw = createPassword.trim();
       const { project } = await createProject(
-        baseUrl,
+        cleanServer,
         {
           name,
           password,
@@ -90,13 +102,14 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
       } catch {
         /* localStorage may be unavailable; ignore */
       }
+      onServerChange?.(cleanServer);
       // Join first to get the session token, which importArchive now requires.
-      let session = await joinProject(baseUrl, project.id, { password });
+      let session = await joinProject(cleanServer, project.id, { password });
       if (importFile) {
-        await importArchive(baseUrl, project.id, session.token, importFile);
-        session = await joinProject(baseUrl, project.id, { password }); // refresh file list
+        await importArchive(cleanServer, project.id, session.token, importFile);
+        session = await joinProject(cleanServer, project.id, { password }); // refresh file list
       }
-      onReady({ ...session, baseUrl, password });
+      onReady({ ...session, baseUrl: cleanServer, password });
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err));
     } finally {
@@ -108,6 +121,14 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h3>Nuevo proyecto</h3>
+
+        <label>Servidor</label>
+        <input
+          value={server}
+          onChange={(e) => setServer(e.target.value)}
+          placeholder="https://pi5-oaq.tail61fec5.ts.net"
+        />
+        <div className="hint">Dónde se crea el proyecto. Ej.: tu Raspberry, o http://localhost:5959.</div>
 
         <label>Nombre del proyecto</label>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="tesis-cap3" autoFocus />

@@ -4,13 +4,14 @@ import { joinProject, parseShareLink } from "../api";
 
 interface JoinProjectModalProps {
   defaultBaseUrl: string;
+  onServerChange?: (url: string) => void;
   initialLink?: string;
   initialError?: string;
   onClose: () => void;
   onReady: (session: JoinProjectResponse & { baseUrl: string; password: string }) => void;
 }
 
-export default function JoinProjectModal({ defaultBaseUrl, initialLink, initialError, onClose, onReady }: JoinProjectModalProps) {
+export default function JoinProjectModal({ defaultBaseUrl, onServerChange, initialLink, initialError, onClose, onReady }: JoinProjectModalProps) {
   const [link, setLink] = useState(initialLink ?? "");
   const initialParsed = initialLink ? parseShareLink(initialLink) : null;
   const [host, setHost] = useState(initialParsed?.baseUrl ?? defaultBaseUrl);
@@ -36,9 +37,11 @@ export default function JoinProjectModal({ defaultBaseUrl, initialLink, initialE
     }
     setBusy(true);
     setError(null);
+    const cleanHost = host.trim().replace(/\/+$/, "");
     try {
-      const session = await joinProject(host, id.trim(), { password });
-      onReady({ ...session, baseUrl: host, password });
+      const session = await joinProject(cleanHost, id.trim(), { password });
+      onServerChange?.(cleanHost);
+      onReady({ ...session, baseUrl: cleanHost, password });
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err));
     } finally {
