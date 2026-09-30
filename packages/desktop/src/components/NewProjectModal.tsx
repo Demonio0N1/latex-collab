@@ -47,6 +47,12 @@ export default function NewProjectModal({ baseUrl, onServerChange, onClose, onRe
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Choosing a local folder only makes sense when the server runs on THIS
+  // machine. For a remote server (e.g. the Raspberry Pi) the files live on the
+  // server, so we hide the folder picker and let the server pick the path.
+  const serverIsLocal = /localhost|127\.0\.0\.1/.test(server);
+  const showFolderPicker = SUPPORTS_LOCAL_TOOLS && serverIsLocal;
+
   useEffect(() => {
     listTemplates(server)
       .then((r) => setTemplates(r.templates))
@@ -100,7 +106,8 @@ export default function NewProjectModal({ baseUrl, onServerChange, onClose, onRe
           name,
           password,
           template,
-          rootPath: projectPath || undefined,
+          // Only send a local folder when the server is on this machine.
+          rootPath: showFolderPicker ? projectPath || undefined : undefined,
         },
         trimmedCreatePw || undefined
       );
@@ -170,7 +177,7 @@ export default function NewProjectModal({ baseUrl, onServerChange, onClose, onRe
         <label>O importar un proyecto existente (.zip)</label>
         <input type="file" accept=".zip" onChange={(e) => setImportFile(e.target.files?.[0] ?? null)} />
 
-        {SUPPORTS_LOCAL_TOOLS && (
+        {showFolderPicker && (
           <>
             <label>Guardar la carpeta del proyecto en</label>
             <div className="location-toggle">
