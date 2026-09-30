@@ -131,6 +131,32 @@ Además, los endpoints sensibles ya vienen protegidos sin configurar nada:
 - **`/network-info`** (tus IPs de LAN) solo responde a peticiones realmente
   locales, nunca a las que llegan reenviadas por Funnel o un proxy.
 
+## Alojar el servidor en una Raspberry Pi (24/7, sin usar tu PC)
+
+Ideal para que la colaboración siga viva aunque apagues tu computadora, sin
+exponer tu máquina personal. En la Raspberry (Raspberry Pi OS 64-bit) el
+instalador es **el mismo**:
+
+```bash
+git clone https://github.com/Demonio0N1/latex-collab.git
+cd latex-collab
+./setup_latex.sh
+```
+
+`setup_latex.sh` **detecta la Raspberry** y ofrece el **modo servidor**: instala
+solo lo necesario (Node ≥ 22, dependencias del proyecto) — **sin** Rust, sin
+Tauri, sin LaTeX y sin compilar la app de escritorio — y crea un servicio
+`systemd` (`latex-collab`) que arranca solo al encender. También te ofrece
+poner una contraseña de creación e instalar Tailscale/Funnel.
+
+- Forzar el modo servidor en cualquier Linux: `./setup_latex.sh --server`
+- Sin preguntas (desatendido): `./setup_latex.sh --server --yes`
+- El Pi es el servidor; te conectas a él desde la app de escritorio o iOS
+  usando su IP (LAN o Tailscale) en el puerto `5959`.
+
+Comandos del servicio: `sudo systemctl status latex-collab`,
+`journalctl -u latex-collab -f`, `sudo systemctl restart latex-collab`.
+
 ## Abrir la app: ícono y comando de terminal
 
 - **Linux**: al instalar el `.deb` o integrar el `.AppImage`, la app aparece

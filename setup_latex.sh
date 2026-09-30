@@ -34,7 +34,16 @@ cd "$SCRIPT_DIR"
 
 [ -f "$SCRIPT_DIR/package.json" ] || fail "Corre este script desde la carpeta del proyecto (donde está package.json)."
 
-if [ "${1:-}" = "--yes" ]; then AUTO_YES=1; fi
+# Flags: --yes (no preguntar), --server (solo servidor, sin app de escritorio),
+# --full (forzar instalación completa aunque sea una Raspberry).
+MODE=""
+for arg in "$@"; do
+  case "$arg" in
+    --yes)    AUTO_YES=1 ;;
+    --server) MODE=server ;;
+    --full)   MODE=full ;;
+  esac
+done
 
 case "$(uname -s)" in
   Darwin) PLATFORM=macos ;;
@@ -42,7 +51,24 @@ case "$(uname -s)" in
   *) fail "Este instalador solo soporta macOS y Linux. Sistema detectado: $(uname -s)" ;;
 esac
 
-echo -e "${BOLD}LaTeX Collab — instalador${NC} (plataforma: $PLATFORM)"
+is_raspberry_pi() {
+  grep -qi "raspberry pi" /proc/device-tree/model 2>/dev/null \
+    || grep -qi "raspberry pi" /sys/firmware/devicetree/base/model 2>/dev/null
+}
+
+# Sin flag: en una Raspberry Pi lo normal es instalar SOLO el servidor
+# (headless, sin compilar la app de escritorio). En lo demás, instalación completa.
+if [ -z "$MODE" ]; then
+  MODE=full
+  if [ "$PLATFORM" = "linux" ] && is_raspberry_pi; then
+    info "Detecté una Raspberry Pi."
+    if ask_yes "¿Instalar solo el SERVIDOR de colaboración? (recomendado en Raspberry: sin compilar la app de escritorio)"; then
+      MODE=server
+    fi
+  fi
+fi
+
+echo -e "${BOLD}LaTeX Collab — instalador${NC} (plataforma: $PLATFORM, modo: $MODE)"
 echo
 
 # ---------------------------------------------------------------------------
@@ -92,7 +118,30 @@ install_linux_system_deps() {
   ok "Dependencias del sistema instaladas."
 }
 
-if [ "$PLATFORM" = "macos" ]; then install_macos_system_deps; else install_linux_system_deps; fi
+# El servidor no compila la app de escritorio ni LaTeX: solo necesita git y
+# curl (para instalar Node). Nada de webkit/gtk/rust.
+install_server_system_deps() {
+  if command -v apt-get >/dev/null 2>&1; then
+    info "Instalando dependencias básicas (apt, requiere sudo)..."
+    sudo apt-get update
+    sudo apt-get install -y git curl ca-certificates
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y git curl ca-certificates
+  elif command -v pacman >/dev/null 2>&1; then
+    sudo pacman -Sy --needed --noconfirm git curl ca-certificates
+  else
+    warn "No encontré apt/dnf/pacman; asegúrate de tener git y curl instalados."
+  fi
+  ok "Dependencias básicas listas."
+}
+
+if [ "$MODE" = "server" ]; then
+  install_server_system_deps
+elif [ "$PLATFORM" = "macos" ]; then
+  install_macos_system_deps
+else
+  install_linux_system_deps
+fi
 echo
 
 # ---------------------------------------------------------------------------
@@ -117,7 +166,28 @@ install_node() {
   ok "Node.js instalado: $(node -v)"
 }
 
-install_node
+# node:sqlite (que usa el servidor) necesita Node >= 22. En el modo servidor
+# instalamos Node 24 a nivel de sistema (NodeSource) para que systemd lo
+# encuentre sin depender de nvm.
+install_node_server() {
+  local major=0
+  if command -v node >/dev/null 2>&1; then major="$(node -v | sed 's/v//' | cut -d. -f1)"; fi
+  if [ "$major" -ge 22 ]; then
+    ok "Node.js ya está instalado: $(node -v)"
+    return 0
+  fi
+  if command -v apt-get >/dev/null 2>&1; then
+    info "Instalando Node.js 24 (NodeSource, requiere sudo)..."
+    curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+  else
+    warn "Sin apt: instalando Node vía nvm (revisa la ruta de node en el servicio systemd)."
+    install_node
+  fi
+  ok "Node.js: $(node -v)"
+}
+
+if [ "$MODE" = "server" ]; then install_node_server; else install_node; fi
 echo
 
 # ---------------------------------------------------------------------------
@@ -136,8 +206,10 @@ install_rust() {
   ok "Rust instalado: $(rustc --version)"
 }
 
-install_rust
-echo
+if [ "$MODE" = "full" ]; then
+  install_rust
+  echo
+fi
 
 # ---------------------------------------------------------------------------
 # 4. Tailscale + Funnel (opcional) — para que "Compartir" genere un link
@@ -304,8 +376,12 @@ install_latex_distribution() {
   fi
 }
 
-install_latex_distribution
-echo
+# El servidor no compila PDFs (eso lo hace el cliente de escritorio), así que
+# en el modo servidor no hace falta una distribución LaTeX.
+if [ "$MODE" = "full" ]; then
+  install_latex_distribution
+  echo
+fi
 
 # ---------------------------------------------------------------------------
 # 6. Dependencias del proyecto (necesarias antes de poder compilar la app)
@@ -324,6 +400,60 @@ echo
 
 LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
 APP_INSTALLED=0
+SERVER_SERVICE_CREATED=0
+
+# En modo servidor no se compila ninguna app: se deja el servidor corriendo
+# como servicio systemd (arranca solo al encender la Raspberry).
+setup_server_service() {
+  if ! ask_yes "¿Crear un servicio systemd para que el servidor arranque solo al encender?"; then
+    warn "Omitido. Para arrancarlo a mano: cd packages/server && LATEX_COLLAB_HOST=0.0.0.0 npx tsx src/index.ts"
+    return 0
+  fi
+  if ! command -v systemctl >/dev/null 2>&1; then
+    warn "No hay systemd en este sistema; arranca el servidor a mano (comando de arriba)."
+    return 0
+  fi
+
+  local tsx_bin="$SCRIPT_DIR/node_modules/.bin/tsx"
+  if [ ! -x "$tsx_bin" ]; then
+    warn "No encontré $tsx_bin (¿falló npm install?). No creo el servicio."
+    return 0
+  fi
+  local node_dir; node_dir="$(dirname "$(command -v node)")"
+
+  local create_pass=""
+  if ask_yes "¿Poner una contraseña para crear proyectos? (recomendado si vas a exponerlo con Funnel)"; then
+    read -rp "Contraseña de creación: " create_pass
+  fi
+
+  local unit="/etc/systemd/system/latex-collab.service"
+  info "Creando $unit (requiere sudo)..."
+  sudo tee "$unit" >/dev/null <<EOF
+[Unit]
+Description=LaTeX Collab server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=$USER
+WorkingDirectory=$SCRIPT_DIR/packages/server
+Environment=PATH=$node_dir:/usr/bin:/bin
+Environment=LATEX_COLLAB_HOST=0.0.0.0
+Environment=LATEX_COLLAB_TEMPLATES_DIR=$SCRIPT_DIR/templates
+${create_pass:+Environment=LATEX_COLLAB_CREATE_PASSWORD=$create_pass}
+ExecStart=$tsx_bin src/index.ts
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  sudo systemctl daemon-reload
+  sudo systemctl enable latex-collab >/dev/null 2>&1 || true
+  SERVER_SERVICE_CREATED=1
+  ok "Servicio 'latex-collab' creado y habilitado (arranca solo al encender)."
+}
 
 build_and_install_macos_app() {
   [ "$PLATFORM" = "macos" ] || return 0
@@ -458,51 +588,84 @@ EOF
   ok "App instalada como AppImage en \$HOME/.local/bin/latex_collab, con entrada de menú."
 }
 
-build_and_install_macos_app
-build_and_install_linux_app
-install_macos_cli_shortcut
+if [ "$MODE" = "server" ]; then
+  setup_server_service
+else
+  build_and_install_macos_app
+  build_and_install_linux_app
+  install_macos_cli_shortcut
+fi
 echo
 
 # ---------------------------------------------------------------------------
 # 8. Listo — resumen y arranque opcional
 # ---------------------------------------------------------------------------
 
-echo -e "${BOLD}Todo instalado.${NC}"
-echo
-echo "Antes de compartir proyectos fuera de tu máquina, revisa:"
-echo "  packages/server/src/config.ts -> APP_DOWNLOAD_URL (hoy es un placeholder)"
-echo
-echo "Para desarrollo (hot-reload, no es la app instalada):"
-echo "  npm run server:dev     # servidor de colaboración (terminal 1)"
-echo "  npm run desktop:dev    # app de escritorio            (terminal 2)"
-echo
-if [ "$PLATFORM" = "macos" ]; then
-  if [ "$APP_INSTALLED" = "1" ]; then
-    echo "La app ya quedó instalada en /Applications — ábrela desde Launchpad,"
-    echo "Spotlight, o escribiendo 'latex_collab' en cualquier terminal."
+if [ "$MODE" = "server" ]; then
+  # ----- Resumen modo servidor (Raspberry Pi / Linux headless) -----
+  echo -e "${BOLD}Servidor instalado.${NC}"
+  echo
+  if [ "$SERVER_SERVICE_CREATED" = "1" ]; then
+    if ask_yes "¿Arrancar el servidor ahora?"; then
+      sudo systemctl restart latex-collab
+      sleep 2
+      sudo systemctl --no-pager --lines=5 status latex-collab || true
+    fi
+    echo
+    echo "Comandos útiles:"
+    echo "  sudo systemctl status latex-collab     # estado"
+    echo "  journalctl -u latex-collab -f          # logs en vivo"
+    echo "  sudo systemctl restart latex-collab    # reiniciar tras un cambio"
   else
-    echo "Escribe 'latex_collab' en cualquier terminal para abrirla, una vez que"
-    echo "la compiles e instales (ver el paso de arriba que omitiste)."
+    echo "Para arrancar el servidor:"
+    echo "  cd packages/server && LATEX_COLLAB_HOST=0.0.0.0 npx tsx src/index.ts"
   fi
+  echo
+  echo "Conéctate desde la app de escritorio o iOS usando la IP de esta máquina"
+  echo "(LAN o Tailscale) en el puerto ${LATEX_COLLAB_PORT}. Si activaste Funnel,"
+  echo "la app detecta el link público automáticamente."
+  echo
+  echo "Recuerda: antes de compartir fuera de tu máquina revisa"
+  echo "  packages/server/src/config.ts -> APP_DOWNLOAD_URL (hoy es un placeholder)"
 else
-  if [ "$APP_INSTALLED" = "1" ]; then
-    echo "La app ya quedó instalada — deberías verla en tu menú de aplicaciones,"
-    echo "y el comando 'latex_collab' ya está disponible (abre una terminal nueva"
-    echo "si no lo encuentra todavía)."
+  # ----- Resumen modo completo (escritorio + servidor) -----
+  echo -e "${BOLD}Todo instalado.${NC}"
+  echo
+  echo "Antes de compartir proyectos fuera de tu máquina, revisa:"
+  echo "  packages/server/src/config.ts -> APP_DOWNLOAD_URL (hoy es un placeholder)"
+  echo
+  echo "Para desarrollo (hot-reload, no es la app instalada):"
+  echo "  npm run server:dev     # servidor de colaboración (terminal 1)"
+  echo "  npm run desktop:dev    # app de escritorio            (terminal 2)"
+  echo
+  if [ "$PLATFORM" = "macos" ]; then
+    if [ "$APP_INSTALLED" = "1" ]; then
+      echo "La app ya quedó instalada en /Applications — ábrela desde Launchpad,"
+      echo "Spotlight, o escribiendo 'latex_collab' en cualquier terminal."
+    else
+      echo "Escribe 'latex_collab' en cualquier terminal para abrirla, una vez que"
+      echo "la compiles e instales (ver el paso de arriba que omitiste)."
+    fi
   else
-    echo "Escribe 'latex_collab' en cualquier terminal para abrirla, una vez que"
-    echo "la compiles e instales (ver el paso de arriba que omitiste)."
+    if [ "$APP_INSTALLED" = "1" ]; then
+      echo "La app ya quedó instalada — deberías verla en tu menú de aplicaciones,"
+      echo "y el comando 'latex_collab' ya está disponible (abre una terminal nueva"
+      echo "si no lo encuentra todavía)."
+    else
+      echo "Escribe 'latex_collab' en cualquier terminal para abrirla, una vez que"
+      echo "la compiles e instales (ver el paso de arriba que omitiste)."
+    fi
   fi
-fi
-echo
+  echo
 
-if ask_yes "¿Quieres que arranque el servidor y la app ahora mismo?"; then
-  info "Iniciando el servidor de colaboración en segundo plano..."
-  (npm run server:dev > /tmp/latex-collab-server.log 2>&1 &)
-  sleep 2
-  ok "Servidor arriba en http://localhost:5959 (log: /tmp/latex-collab-server.log)"
-  info "Abriendo la app de escritorio (la primera vez puede tardar varios minutos compilando)..."
-  npm run desktop:dev
-else
-  echo "Cuando quieras, corre los dos comandos de arriba en dos terminales."
+  if ask_yes "¿Quieres que arranque el servidor y la app ahora mismo?"; then
+    info "Iniciando el servidor de colaboración en segundo plano..."
+    (npm run server:dev > /tmp/latex-collab-server.log 2>&1 &)
+    sleep 2
+    ok "Servidor arriba en http://localhost:5959 (log: /tmp/latex-collab-server.log)"
+    info "Abriendo la app de escritorio (la primera vez puede tardar varios minutos compilando)..."
+    npm run desktop:dev
+  else
+    echo "Cuando quieras, corre los dos comandos de arriba en dos terminales."
+  fi
 fi
