@@ -125,7 +125,12 @@ export default function NewProjectModal({ baseUrl, onServerChange, onClose, onRe
         <label>Servidor</label>
         <input
           value={server}
-          onChange={(e) => setServer(e.target.value)}
+          onChange={(e) => {
+            setServer(e.target.value);
+            // Remember it right away, so reopening the dialog keeps your server
+            // instead of snapping back to localhost.
+            onServerChange?.(e.target.value);
+          }}
           placeholder="https://pi5-oaq.tail61fec5.ts.net"
         />
         <div className="hint">Dónde se crea el proyecto. Ej.: tu Raspberry, o http://localhost:5959.</div>
