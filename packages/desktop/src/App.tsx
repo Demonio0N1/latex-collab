@@ -29,12 +29,19 @@ const SERVER_URL_KEY = "latex-collab:serverUrl";
 // user can still change it in the New/Join dialogs (remembered afterwards).
 const DEFAULT_BASE_URL = "https://pi5-oaq.tail61fec5.ts.net";
 
+// The retired default; existing installs may have it cached in localStorage.
+const LEGACY_DEFAULT_URL = "http://localhost:5959";
+
 function loadServerUrl(): string {
   try {
-    return localStorage.getItem(SERVER_URL_KEY) || DEFAULT_BASE_URL;
+    const saved = localStorage.getItem(SERVER_URL_KEY);
+    // Ignore a stale localhost value so this deployment picks up the Pi
+    // default; a real custom server the user chose is kept.
+    if (saved && saved !== LEGACY_DEFAULT_URL) return saved;
   } catch {
-    return DEFAULT_BASE_URL;
+    /* localStorage may be unavailable; fall through to default */
   }
+  return DEFAULT_BASE_URL;
 }
 
 export default function App() {
