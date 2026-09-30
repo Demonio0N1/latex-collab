@@ -24,7 +24,10 @@ type Session = JoinProjectResponse & { baseUrl: string; password: string };
 
 const USER_NAME_KEY = "latex-collab:userName";
 const SERVER_URL_KEY = "latex-collab:serverUrl";
-const DEFAULT_BASE_URL = "http://localhost:5959";
+// Default server the app points at on first run. This deployment hosts the
+// collaboration server on a Raspberry Pi exposed via Tailscale Funnel; the
+// user can still change it in the New/Join dialogs (remembered afterwards).
+const DEFAULT_BASE_URL = "https://pi5-oaq.tail61fec5.ts.net";
 
 function loadServerUrl(): string {
   try {
