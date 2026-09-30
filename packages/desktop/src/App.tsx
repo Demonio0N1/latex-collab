@@ -13,7 +13,7 @@ import ShareDialog from "./components/ShareDialog";
 import Editor from "./components/Editor";
 import PdfPreview from "./components/PdfPreview";
 import WelcomeScreen from "./components/WelcomeScreen";
-import { joinProject, parseShareLink, listProjectFiles, downloadProjectFile } from "./api";
+import { joinProject, parseShareLink, listProjectFiles, downloadProjectFile, uploadProjectFile } from "./api";
 import { listRecentProjects, removeRecentProject, upsertRecentProject, type RecentProject } from "./recentProjects";
 import { resolveProjectMirrorDir, mirrorFileExists, writeMirrorBinary } from "./localMirror";
 import { join as joinPath } from "@tauri-apps/api/path";
@@ -193,6 +193,30 @@ export default function App() {
     setActiveFile(path);
   }
 
+  // Create a new .tex file in the current project and open it. Auto-named to
+  // avoid a blocking prompt dialog; uses the existing upload endpoint.
+  async function handleNewFile() {
+    if (!session) return;
+    const existing = new Set(files.map((f) => f.path));
+    let name = "documento.tex";
+    for (let n = 2; existing.has(name); n++) name = `documento-${n}.tex`;
+    const starter = `\\documentclass{article}\n\n\\begin{document}\n\n\\end{document}\n`;
+    try {
+      const res = await uploadProjectFile(
+        session.baseUrl,
+        session.project.id,
+        session.token,
+        name,
+        new TextEncoder().encode(starter)
+      );
+      setFiles(res.files);
+      openFile(name);
+      setMobileDrawer("none");
+    } catch (err) {
+      alert(`No se pudo crear el archivo: ${String(err instanceof Error ? err.message : err)}`);
+    }
+  }
+
   function closeFile(path: string) {
     setOpenFiles((files) => {
       const next = files.filter((f) => f !== path);
@@ -265,6 +289,9 @@ export default function App() {
               </div>
               {showPreview && <PdfPreview texFilePath={localFilePath} />}
               <div className={`right-panel drawer-panel ${mobileDrawer === "panel" ? "open" : ""}`}>
+                <button className="new-file-btn" onClick={handleNewFile}>
+                  + Nuevo archivo
+                </button>
                 <FileTree
                   files={files}
                   activeFile={activeFile}

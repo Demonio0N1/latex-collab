@@ -893,6 +893,21 @@ textarea:focus {
   flex-direction: column;
 }
 
+.new-file-btn {
+  margin: 10px 10px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-hi);
+  font-weight: 600;
+  cursor: pointer;
+}
+.new-file-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
 .file-tree {
   padding: 14px 10px;
   overflow-y: auto;

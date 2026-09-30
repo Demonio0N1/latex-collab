@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import type { JoinProjectResponse } from "@latex-collab/shared";
-import { createProject, importArchive, joinProject, listTemplates } from "../api";
+import { createProject, importArchive, joinProject, listTemplates, uploadProjectFile } from "../api";
+
+const BLANK_MAIN_TEX = `\\documentclass{article}
+
+\\begin{document}
+
+Escribe aquí tu documento.
+
+\\end{document}
+`;
 import { getDefaultLocationPref, setDefaultLocationPref, suggestProjectPath, type DefaultLocation } from "../projectPaths";
 import { SUPPORTS_LOCAL_TOOLS } from "../platform";
 
@@ -103,10 +112,15 @@ export default function NewProjectModal({ baseUrl, onServerChange, onClose, onRe
         /* localStorage may be unavailable; ignore */
       }
       onServerChange?.(cleanServer);
-      // Join first to get the session token, which importArchive now requires.
+      // Join first to get the session token, which importArchive/upload require.
       let session = await joinProject(cleanServer, project.id, { password });
       if (importFile) {
         await importArchive(cleanServer, project.id, session.token, importFile);
+        session = await joinProject(cleanServer, project.id, { password }); // refresh file list
+      } else if (!template) {
+        // A blank project has no files, so the editor would open empty with no
+        // way to add one. Seed a main.tex so there's something to edit.
+        await uploadProjectFile(cleanServer, project.id, session.token, "main.tex", new TextEncoder().encode(BLANK_MAIN_TEX));
         session = await joinProject(cleanServer, project.id, { password }); // refresh file list
       }
       onReady({ ...session, baseUrl: cleanServer, password });
