@@ -22,6 +22,16 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
   const [templates, setTemplates] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [password, setPassword] = useState(() => Math.random().toString(36).slice(2, 10));
+  // Optional server-wide create-password (for servers exposed via Funnel).
+  // Remembered per server so the user types it once.
+  const createPwKey = `latex-collab:createpw:${baseUrl}`;
+  const [createPassword, setCreatePassword] = useState(() => {
+    try {
+      return localStorage.getItem(createPwKey) ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [template, setTemplate] = useState<string | undefined>(undefined);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [location, setLocation] = useState<DefaultLocation>(getDefaultLocationPref());
@@ -62,12 +72,24 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
     setBusy(true);
     setError(null);
     try {
-      const { project } = await createProject(baseUrl, {
-        name,
-        password,
-        template,
-        rootPath: projectPath || undefined,
-      });
+      const trimmedCreatePw = createPassword.trim();
+      const { project } = await createProject(
+        baseUrl,
+        {
+          name,
+          password,
+          template,
+          rootPath: projectPath || undefined,
+        },
+        trimmedCreatePw || undefined
+      );
+      // Only persist once the server accepted it (we got past createProject).
+      try {
+        if (trimmedCreatePw) localStorage.setItem(createPwKey, trimmedCreatePw);
+        else localStorage.removeItem(createPwKey);
+      } catch {
+        /* localStorage may be unavailable; ignore */
+      }
       // Join first to get the session token, which importArchive now requires.
       let session = await joinProject(baseUrl, project.id, { password });
       if (importFile) {
@@ -132,6 +154,18 @@ export default function NewProjectModal({ baseUrl, onClose, onReady }: NewProjec
             <div className="hint">Por defecto crea "LaTeX Projects/{name || "proyecto"}" ahí. Puedes elegir otra carpeta.</div>
           </>
         )}
+
+        <label>Contraseña del servidor (solo si el servidor la exige)</label>
+        <input
+          type="password"
+          value={createPassword}
+          onChange={(e) => setCreatePassword(e.target.value)}
+          placeholder="Déjalo vacío si tu servidor no la pide"
+        />
+        <div className="hint">
+          La piden los servidores expuestos a internet (p. ej. con Tailscale Funnel) para que un
+          desconocido no cree proyectos. Se recuerda para este servidor.
+        </div>
 
         <button className="primary" disabled={busy} onClick={handleCreate}>
           {busy ? "Creando..." : "Crear proyecto"}

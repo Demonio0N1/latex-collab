@@ -37,9 +37,17 @@ export function getNetworkInfo(baseUrl: string): Promise<NetworkInfo> {
 
 export function createProject(
   baseUrl: string,
-  body: CreateProjectRequest
+  body: CreateProjectRequest,
+  createPassword?: string
 ): Promise<CreateProjectResponse> {
-  return request(baseUrl, "/api/projects", { method: "POST", body: JSON.stringify(body) });
+  // Servers exposed publicly (e.g. via Tailscale Funnel) can require a
+  // server-wide create-password; it travels in the x-create-password header,
+  // separate from the per-project password in the body.
+  return request(baseUrl, "/api/projects", {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: createPassword ? { "x-create-password": createPassword } : undefined,
+  });
 }
 
 export function joinProject(
