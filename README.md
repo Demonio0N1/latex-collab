@@ -157,6 +157,25 @@ poner una contraseña de creación e instalar Tailscale/Funnel.
 Comandos del servicio: `sudo systemctl status latex-collab`,
 `journalctl -u latex-collab -f`, `sudo systemctl restart latex-collab`.
 
+## Instaladores listos (Windows / Linux / macOS)
+
+Para repartir la app no hace falta que cada persona compile: el workflow de
+GitHub Actions (`.github/workflows/installers.yml`) compila los instaladores
+en los servidores de GitHub.
+
+- **Publicar una versión**: `git tag v0.1.0 && git push --tags` → se crea un
+  **borrador de Release** con el `.exe` (Windows), `.deb`/`.AppImage` (Linux)
+  y `.dmg` (macOS universal) adjuntos. Publícalo desde la pestaña *Releases*
+  y comparte ese link.
+- **Prueba manual**: pestaña **Actions → instaladores → Run workflow**; los
+  instaladores quedan como *artifacts* de esa ejecución.
+- Las apps van **sin firmar**: Windows muestra el aviso de SmartScreen
+  ("Más información" → "Ejecutar de todas formas") y macOS pide
+  clic derecho → *Abrir* la primera vez.
+- Quien instale la app también necesita su **LaTeX local** para la vista
+  previa de PDF (en Windows se recomienda **TeX Live**, cuyo `latexmk`
+  funciona de fábrica).
+
 ## Abrir la app: ícono y comando de terminal
 
 - **Linux**: al instalar el `.deb` o integrar el `.AppImage`, la app aparece
