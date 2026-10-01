@@ -161,6 +161,9 @@ export default function Editor({
     setImageBusy(true);
     try {
       const bytes = await readFile(picked);
+      if (!bytes || bytes.byteLength === 0) {
+        throw new Error(`No se pudo leer la imagen (0 bytes): ${picked}`);
+      }
       // LaTeX no tolera espacios/acentos/paréntesis en nombres de archivo:
       // "Captura de pantalla (1).png" rompería la compilación en silencio.
       const rawName = picked.split(/[\\/]/).pop()!;

@@ -1,6 +1,7 @@
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
-import { resolveLocalMirrorPath, writeMirrorBinary, mirrorFileExists } from "./localMirror";
+import { stat } from "@tauri-apps/plugin-fs";
+import { resolveLocalMirrorPath, writeMirrorBinary } from "./localMirror";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
@@ -59,14 +60,33 @@ export class AssetsSync {
     this.listeners.forEach((cb) => cb(names));
   }
 
-  /** Escribe en la carpeta local del proyecto toda imagen que aún no tengamos. */
+  /**
+   * Escribe en la carpeta local toda imagen que falte O cuyo tamaño en disco
+   * no coincida con los bytes sincronizados. Comparar tamaños (y no solo
+   * existencia) hace el espejo autocurable: un intento fallido que dejó un
+   * archivo de 0 bytes se repara solo en la siguiente pasada.
+   */
   private async mirrorAll(): Promise<void> {
     for (const [name, bytes] of this.map.entries()) {
       if (this.mirrored.has(name)) continue;
+      if (!bytes || bytes.byteLength === 0) {
+        console.warn(`imagen sincronizada vacía, se ignora: ${name}`);
+        continue;
+      }
       try {
         const fullPath = await resolveLocalMirrorPath(this.projectId, this.projectName, name);
-        if (!(await mirrorFileExists(fullPath))) {
+        let diskSize = -1;
+        try {
+          diskSize = (await stat(fullPath)).size;
+        } catch {
+          /* no existe todavía */
+        }
+        if (diskSize !== bytes.byteLength) {
           await writeMirrorBinary(fullPath, bytes);
+          const written = (await stat(fullPath)).size;
+          if (written !== bytes.byteLength) {
+            throw new Error(`escritura incompleta (${written}/${bytes.byteLength} bytes)`);
+          }
         }
         this.mirrored.add(name);
       } catch (err) {
@@ -77,6 +97,9 @@ export class AssetsSync {
 
   /** Agrega una imagen: se replica sola a todos los colaboradores conectados. */
   addImage(relativePath: string, bytes: Uint8Array): void {
+    if (!bytes || bytes.byteLength === 0) {
+      throw new Error("La imagen llegó vacía (0 bytes) — no se puede sincronizar.");
+    }
     if (bytes.byteLength > MAX_IMAGE_BYTES) {
       throw new Error("La imagen supera el límite de 8 MB para sincronizar entre usuarios.");
     }
