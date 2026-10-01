@@ -10,8 +10,7 @@ import { yCollab } from "y-codemirror.next";
 import { randomColor } from "@latex-collab/shared";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { resolveLocalMirrorPath, writeMirror, writeMirrorBinary } from "../localMirror";
-import { uploadProjectFile } from "../api";
+import { resolveLocalMirrorPath, writeMirror } from "../localMirror";
 import { wrapSelection, insertTemplate } from "../codeMirrorSnippets";
 import EditorToolbar from "./EditorToolbar";
 
@@ -25,6 +24,8 @@ interface EditorProps {
   active: boolean;
   onPresenceChange: (peers: { name: string; color: string }[]) => void;
   onLocalPathReady: (path: string | null) => void;
+  /** Publica una imagen en el canal entre usuarios (se replica y guarda sola en cada máquina). */
+  onAddImage: (relativePath: string, bytes: Uint8Array) => void;
 }
 
 const MIRROR_DEBOUNCE_MS = 800;
@@ -46,6 +47,7 @@ export default function Editor({
   active,
   onPresenceChange,
   onLocalPathReady,
+  onAddImage,
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -148,8 +150,7 @@ export default function Editor({
 
   async function handleInsertImage() {
     const view = viewRef.current;
-    const localPath = localPathRef.current;
-    if (!view || !localPath || imageBusy) return;
+    if (!view || imageBusy) return;
 
     const picked = await openDialog({
       multiple: false,
@@ -161,16 +162,16 @@ export default function Editor({
     try {
       const bytes = await readFile(picked);
       const fileName = picked.split(/[\\/]/).pop()!;
+      const relativePath = `images/${fileName}`;
 
-      await uploadProjectFile(baseUrl, projectId, token, fileName, bytes);
-
-      const dir = localPath.slice(0, Math.max(localPath.lastIndexOf("/"), localPath.lastIndexOf("\\")));
-      await writeMirrorBinary(`${dir}/${fileName}`, bytes);
+      // La imagen viaja por el canal CRDT a todos los colaboradores; cada
+      // máquina (incluida esta) la guarda sola en su carpeta local images/.
+      onAddImage(relativePath, bytes);
 
       insertTemplate(
         view,
         "\\begin{figure}[h]\n  \\centering\n  \\includegraphics[width=0.8\\textwidth]{",
-        fileName,
+        relativePath,
         "}\n  \\caption{Descripción de la imagen}\n\\end{figure}\n"
       );
     } catch (err) {

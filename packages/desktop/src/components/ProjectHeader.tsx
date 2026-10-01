@@ -7,6 +7,8 @@ interface ProjectHeaderProps {
   projectName: string;
   projectId: string;
   localFilePath: string | null;
+  /** Carpeta local visible del proyecto (Documentos/LaTeX Projects/...). */
+  localDirPath?: string | null;
   showPreview: boolean;
   peers: { name: string; color: string }[];
   selfName: string;
@@ -22,6 +24,7 @@ export default function ProjectHeader({
   projectName,
   projectId,
   localFilePath,
+  localDirPath,
   showPreview,
   peers,
   selfName,
@@ -53,7 +56,12 @@ export default function ProjectHeader({
     <div className="project-header">
       <div className="project-header-title">
         {onToggleNav && (
-          <button className="icon-button mobile-only nav-toggle" onClick={onToggleNav} title="Proyectos" aria-label="Proyectos">
+          <button
+            className="icon-button nav-toggle"
+            onClick={onToggleNav}
+            title="Mostrar/ocultar barra lateral"
+            aria-label="Mostrar/ocultar barra lateral"
+          >
             ☰
           </button>
         )}
@@ -65,6 +73,15 @@ export default function ProjectHeader({
         <span className="header-sep" />
         {SUPPORTS_LOCAL_TOOLS && (
           <>
+            {localDirPath && (
+              <button
+                className="desktop-only"
+                onClick={() => openPath(localDirPath).catch((err) => setStatus(`No se pudo abrir la carpeta: ${String(err)}`))}
+                title={`Carpeta local del proyecto:\n${localDirPath}`}
+              >
+                📂 Carpeta
+              </button>
+            )}
             <button onClick={onTogglePreview} className={`desktop-only ${showPreview ? "active-toggle" : ""}`}>
               {showPreview ? "Ocultar PDF" : "Vista previa PDF"}
             </button>

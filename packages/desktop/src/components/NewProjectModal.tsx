@@ -166,7 +166,12 @@ export default function NewProjectModal({ baseUrl, onServerChange, onClose, onRe
           }}
           placeholder="https://pi5-oaq.tail61fec5.ts.net"
         />
-        <div className="hint">Dónde se crea el proyecto. Ej.: tu Raspberry, o http://localhost:5959.</div>
+        <div className="hint">
+          Dónde se crea el proyecto. Ej.: tu Raspberry, o http://localhost:5959.
+          {!serverIsLocal && SUPPORTS_LOCAL_TOOLS && (
+            <> Los archivos viven en el servidor y tendrás una copia local automática en <strong>Documentos/LaTeX Projects</strong>.</>
+          )}
+        </div>
 
         <label>Nombre del proyecto</label>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="tesis-cap3" autoFocus />

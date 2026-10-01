@@ -14,6 +14,8 @@ import Editor from "./components/Editor";
 import PdfPreview from "./components/PdfPreview";
 import WelcomeScreen from "./components/WelcomeScreen";
 import { joinProject, parseShareLink, listProjectFiles, downloadProjectFile, uploadProjectFile } from "./api";
+import { AssetsSync } from "./assetsSync";
+import { SUPPORTS_LOCAL_TOOLS } from "./platform";
 import { listRecentProjects, removeRecentProject, upsertRecentProject, type RecentProject } from "./recentProjects";
 import { resolveProjectMirrorDir, mirrorFileExists, writeMirrorBinary } from "./localMirror";
 import { join as joinPath } from "@tauri-apps/api/path";
@@ -60,6 +62,37 @@ export default function App() {
   // Last server the user pointed at (e.g. the Raspberry Pi), remembered so
   // both "new" and "join" default to it instead of always localhost.
   const [serverUrl, setServerUrl] = useState<string>(() => loadServerUrl());
+
+  // Barra lateral ocultable en escritorio (en móvil ya es un drawer).
+  const [navHidden, setNavHidden] = useState(() => {
+    try {
+      return localStorage.getItem("latex-collab:navHidden") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleNav = useCallback(() => {
+    if (window.matchMedia("(max-width: 820px)").matches) {
+      setMobileDrawer((d) => (d === "nav" ? "none" : "nav"));
+      return;
+    }
+    setNavHidden((h) => {
+      const next = !h;
+      try {
+        localStorage.setItem("latex-collab:navHidden", next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
+  // Imágenes sincronizadas usuario-a-usuario (canal CRDT, no tocan el disco del servidor).
+  const assetsRef = useRef<AssetsSync | null>(null);
+  const [assetNames, setAssetNames] = useState<string[]>([]);
+
+  // Carpeta local visible donde vive la copia del proyecto (Documentos/LaTeX Projects).
+  const [localProjectDir, setLocalProjectDir] = useState<string | null>(null);
 
   // Avisos no bloqueantes (reemplazan a alert(), que en móvil estorba o ni aparece).
   const [toast, setToast] = useState<string | null>(null);
@@ -182,6 +215,34 @@ export default function App() {
     };
   }, [session]);
 
+  // Canal de imágenes del proyecto abierto: vive mientras dure la sesión.
+  useEffect(() => {
+    if (!session) {
+      setAssetNames([]);
+      return;
+    }
+    const assets = new AssetsSync(session.baseUrl, session.project.id, session.project.name, session.token);
+    assetsRef.current = assets;
+    const off = assets.onChange(setAssetNames);
+    setAssetNames(assets.names());
+    return () => {
+      off();
+      assets.destroy();
+      assetsRef.current = null;
+    };
+  }, [session]);
+
+  // Resuelve (y muestra) la carpeta local del proyecto.
+  useEffect(() => {
+    if (!session || !SUPPORTS_LOCAL_TOOLS) {
+      setLocalProjectDir(null);
+      return;
+    }
+    resolveProjectMirrorDir(session.project.id, session.project.name)
+      .then(setLocalProjectDir)
+      .catch(() => setLocalProjectDir(null));
+  }, [session]);
+
   async function handleOpenRecent(project: RecentProject) {
     try {
       const joined = await joinProject(project.baseUrl, project.id, { password: project.password });
@@ -235,8 +296,20 @@ export default function App() {
 
   const activeKey = session ? `${session.project.id}@${session.baseUrl}` : null;
 
+  // Las imágenes sincronizadas usuario-a-usuario no existen en el servidor,
+  // así que se suman al árbol de archivos del lado del cliente.
+  const treeFiles: ProjectFile[] = [
+    ...files,
+    ...assetNames
+      .filter((name) => !files.some((f) => f.path === name))
+      .map((name) => ({ path: name, kind: "image" as const, sizeBytes: 0 })),
+  ];
+
   return (
-    <div className={`shell ${session ? "has-session" : "no-session"}`} data-drawer={mobileDrawer}>
+    <div
+      className={`shell ${session ? "has-session" : "no-session"}${navHidden ? " nav-hidden" : ""}`}
+      data-drawer={mobileDrawer}
+    >
       {mobileDrawer !== "none" && <div className="drawer-backdrop" onClick={() => setMobileDrawer("none")} />}
 
       <div className={`drawer-nav ${mobileDrawer === "nav" ? "open" : ""}`}>
@@ -268,10 +341,11 @@ export default function App() {
               projectName={session.project.name}
               projectId={session.project.id}
               localFilePath={localFilePath}
+              localDirPath={localProjectDir}
               showPreview={showPreview}
               peers={peers}
               selfName={userName}
-              onToggleNav={() => setMobileDrawer((d) => (d === "nav" ? "none" : "nav"))}
+              onToggleNav={toggleNav}
               onTogglePeople={() => setMobileDrawer((d) => (d === "panel" ? "none" : "panel"))}
               onTogglePreview={() => setShowPreview((s) => !s)}
               onShare={() => setShowShare(true)}
@@ -292,6 +366,7 @@ export default function App() {
                     active={file === activeFile}
                     onPresenceChange={handlePresenceChange}
                     onLocalPathReady={handleLocalPathReady}
+                    onAddImage={(name, bytes) => assetsRef.current?.addImage(name, bytes)}
                   />
                 ))}
               </div>
@@ -301,7 +376,7 @@ export default function App() {
                   + Nuevo archivo
                 </button>
                 <FileTree
-                  files={files}
+                  files={treeFiles}
                   activeFile={activeFile}
                   onSelect={(p) => {
                     setMobileDrawer("none");

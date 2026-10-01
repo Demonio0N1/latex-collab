@@ -25,22 +25,32 @@ export class DocRoom {
 
   constructor(
     readonly roomId: string,
-    readonly absoluteFilePath: string
+    readonly absoluteFilePath: string,
+    /**
+     * false para salas que son solo un relé CRDT (p. ej. el canal de imágenes
+     * "__assets__"): nada se lee ni se escribe en disco — los bytes viajan
+     * entre los clientes conectados y cada uno guarda su propia copia local.
+     */
+    readonly persist: boolean = true
   ) {
-    const initialContent = fs.existsSync(absoluteFilePath)
-      ? fs.readFileSync(absoluteFilePath, "utf8")
-      : "";
-    this.doc.getText("content").insert(0, initialContent);
+    if (persist) {
+      const initialContent = fs.existsSync(absoluteFilePath)
+        ? fs.readFileSync(absoluteFilePath, "utf8")
+        : "";
+      this.doc.getText("content").insert(0, initialContent);
+    }
 
     this.doc.on("update", () => this.schedulePersist());
   }
 
   private schedulePersist(): void {
+    if (!this.persist) return;
     if (this.persistTimer) clearTimeout(this.persistTimer);
     this.persistTimer = setTimeout(() => this.persistNow(), PERSIST_DEBOUNCE_MS);
   }
 
   persistNow(): void {
+    if (!this.persist) return;
     const content = this.doc.getText("content").toString();
     fs.writeFileSync(this.absoluteFilePath, content, "utf8");
   }
@@ -129,10 +139,10 @@ export class DocRoom {
 
 const rooms = new Map<string, DocRoom>();
 
-export function getOrCreateRoom(roomId: string, absoluteFilePath: string): DocRoom {
+export function getOrCreateRoom(roomId: string, absoluteFilePath: string, persist = true): DocRoom {
   let room = rooms.get(roomId);
   if (!room) {
-    room = new DocRoom(roomId, absoluteFilePath);
+    room = new DocRoom(roomId, absoluteFilePath, persist);
     rooms.set(roomId, room);
   }
   return room;

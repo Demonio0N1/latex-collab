@@ -52,6 +52,17 @@ server.on("upgrade", (request, socket, head) => {
     return;
   }
 
+  // Canal de imágenes del proyecto: un relé CRDT puro. Los bytes de las
+  // imágenes se pasan de computador a computador vía Yjs y NUNCA se guardan
+  // en el disco del servidor.
+  if (decodeURIComponent(encodedFilePath) === "__assets__") {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      const room = getOrCreateRoom(`${projectId}::__assets__`, "", false);
+      room.addClient(ws);
+    });
+    return;
+  }
+
   let absoluteFilePath: string;
   try {
     absoluteFilePath = resolveSafePath(project.root_path, decodeURIComponent(encodedFilePath));

@@ -1,5 +1,6 @@
-import { appDataDir, join, dirname } from "@tauri-apps/api/path";
+import { appDataDir, documentDir, join, dirname } from "@tauri-apps/api/path";
 import { mkdir, writeTextFile, writeFile, exists } from "@tauri-apps/plugin-fs";
+import { SUPPORTS_LOCAL_TOOLS } from "./platform";
 
 /**
  * Every collaborator (host or remote guest) gets a real local copy of the
@@ -18,11 +19,18 @@ export async function resolveLocalMirrorPath(
   return fullPath;
 }
 
-/** The local folder all of a project's mirrored files live under. */
+/**
+ * The local folder all of a project's mirrored files live under.
+ * On desktop it's a visible, user-friendly location — Documents/LaTeX
+ * Projects — so people can find their files; on mobile (no local compiling,
+ * no Finder) it stays inside the app's sandboxed data dir.
+ */
 export async function resolveProjectMirrorDir(projectId: string, projectName: string): Promise<string> {
-  const base = await appDataDir();
   const safeProjectName = projectName.replace(/[^a-zA-Z0-9-_]/g, "_");
-  return join(base, "projects", `${safeProjectName}-${projectId}`);
+  if (SUPPORTS_LOCAL_TOOLS) {
+    return join(await documentDir(), "LaTeX Projects", `${safeProjectName}-${projectId}`);
+  }
+  return join(await appDataDir(), "projects", `${safeProjectName}-${projectId}`);
 }
 
 export async function writeMirror(fullPath: string, content: string): Promise<void> {

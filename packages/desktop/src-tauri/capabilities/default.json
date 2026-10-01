@@ -14,11 +14,13 @@
       "allow": [{ "name": "latexmk", "cmd": "latexmk", "args": true }]
     },
     "fs:allow-write-text-file",
+    "fs:allow-write-file",
     "fs:allow-mkdir",
     "fs:allow-exists",
     "fs:allow-read-file",
     "fs:allow-stat",
     "fs:scope-appdata-recursive",
+    "fs:scope-document-recursive",
     "opener:allow-open-path",
     "opener:allow-open-url",
     "dialog:allow-open",

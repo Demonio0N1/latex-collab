@@ -1064,6 +1064,14 @@ textarea:focus {
 
 /* ---------- modals ---------- */
 
+/* Barra lateral ocultable con el botón ☰ del encabezado (solo escritorio;
+   en pantallas chicas la barra ya funciona como drawer deslizante). */
+@media (min-width: 821px) {
+  .shell.nav-hidden .drawer-nav {
+    display: none;
+  }
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
