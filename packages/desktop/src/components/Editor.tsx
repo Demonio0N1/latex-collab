@@ -161,8 +161,15 @@ export default function Editor({
     setImageBusy(true);
     try {
       const bytes = await readFile(picked);
-      const fileName = picked.split(/[\\/]/).pop()!;
-      const relativePath = `images/${fileName}`;
+      // LaTeX no tolera espacios/acentos/paréntesis en nombres de archivo:
+      // "Captura de pantalla (1).png" rompería la compilación en silencio.
+      const rawName = picked.split(/[\\/]/).pop()!;
+      const dot = rawName.lastIndexOf(".");
+      const base =
+        (dot > 0 ? rawName.slice(0, dot) : rawName).replace(/[^a-zA-Z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") ||
+        "imagen";
+      const ext = dot > 0 ? rawName.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "") : "png";
+      const relativePath = `images/${base}.${ext}`;
 
       // La imagen viaja por el canal CRDT a todos los colaboradores; cada
       // máquina (incluida esta) la guarda sola en su carpeta local images/.

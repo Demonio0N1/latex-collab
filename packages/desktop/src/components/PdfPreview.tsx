@@ -53,7 +53,17 @@ export default function PdfPreview({ texFilePath }: PdfPreviewProps) {
       if (disposed) return;
       logRef.current = `${logRef.current}\n${chunk}`.slice(-8000);
       setLog(logRef.current);
-      setStatus((current) => (current === "starting" ? "watching" : current));
+      // latexmk sigue corriendo aunque LaTeX falle: si no avisamos, la vista
+      // se queda mostrando el último PDF bueno y parece que "no actualiza".
+      const chunkHasError = /^! |Emergency stop|Errors, so I did not complete|Fatal error occurred/m.test(chunk);
+      if (chunkHasError) {
+        setStatus((current) => {
+          if (current !== "error") setShowLog(true); // abre el log la primera vez
+          return "error";
+        });
+      } else {
+        setStatus((current) => (current === "starting" ? "watching" : current));
+      }
     }).then((watcher) => {
       if (disposed) {
         watcher.stop();
@@ -80,7 +90,7 @@ export default function PdfPreview({ texFilePath }: PdfPreviewProps) {
   const statusLabel = {
     starting: "Iniciando latexmk…",
     watching: "Vigilando cambios",
-    error: "Error — ver log",
+    error: "❌ Error de LaTeX — el PDF muestra la última versión buena",
   }[status];
 
   return (
