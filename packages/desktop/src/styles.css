@@ -1065,9 +1065,12 @@ textarea:focus {
 /* ---------- modals ---------- */
 
 /* Barra lateral ocultable con el botón ☰ del encabezado (solo escritorio;
-   en pantallas chicas la barra ya funciona como drawer deslizante). */
+   en pantallas chicas la barra ya funciona como drawer deslizante).
+   Solo aplica DENTRO de un proyecto: en la pantalla inicial la barra se
+   muestra siempre — ahí viven los "Recientes" y no hay botón ☰ para
+   recuperarla. */
 @media (min-width: 821px) {
-  .shell.nav-hidden .drawer-nav {
+  .shell.has-session.nav-hidden .drawer-nav {
     display: none;
   }
 }
