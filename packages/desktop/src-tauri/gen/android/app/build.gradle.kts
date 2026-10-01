@@ -13,6 +13,15 @@ val tauriProperties = Properties().apply {
     }
 }
 
+// Firma del build release. keystore.properties (ignorado por git) apunta al
+// keystore local; si no existe, el release sale sin firmar (igual que antes).
+val keyProperties = Properties().apply {
+    val propFile = file("keystore.properties")
+    if (propFile.exists()) {
+        propFile.inputStream().use { load(it) }
+    }
+}
+
 android {
     compileSdk = 36
     namespace = "com.latexcollab.desktop"
@@ -23,6 +32,16 @@ android {
         targetSdk = 36
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+    }
+    signingConfigs {
+        create("release") {
+            if (file("keystore.properties").exists()) {
+                keyAlias = keyProperties["keyAlias"] as String
+                keyPassword = keyProperties["password"] as String
+                storeFile = file(keyProperties["storeFile"] as String)
+                storePassword = keyProperties["password"] as String
+            }
+        }
     }
     buildTypes {
         getByName("debug") {
@@ -37,6 +56,9 @@ android {
             }
         }
         getByName("release") {
+            if (file("keystore.properties").exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }

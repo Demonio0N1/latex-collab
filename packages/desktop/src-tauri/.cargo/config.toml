@@ -1,0 +1,16 @@
+# Android 15+ exige bibliotecas nativas alineadas a páginas de 16 KB
+# (https://developer.android.com/16kb-page-size). El NDK r27 enlaza a 4 KB por
+# defecto; este flag alinea los segmentos LOAD del .so a 16 KB. Solo afecta a
+# los targets Android — los builds de escritorio no cambian.
+
+[target.aarch64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.armv7-linux-androideabi]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.i686-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.x86_64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
