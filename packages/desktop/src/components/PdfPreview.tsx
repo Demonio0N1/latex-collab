@@ -41,7 +41,10 @@ export default function PdfPreview({ texFilePath }: PdfPreviewProps) {
         const mtime = info.mtime?.getTime() ?? 0;
         if (mtime && mtime !== lastMtime) {
           lastMtime = mtime;
-          setPdfSrc(`${convertFileSrc(pdfPath)}#t=${mtime}`);
+          // Query param (no fragmento): cambiar solo el "#..." de un iframe
+          // NO recarga el documento en WebKit — el PDF nuevo quedaba en disco
+          // y el visor seguía mostrando el viejo.
+          setPdfSrc(`${convertFileSrc(pdfPath)}?t=${mtime}`);
           setStatus("watching");
         }
       } catch {
@@ -115,7 +118,8 @@ export default function PdfPreview({ texFilePath }: PdfPreviewProps) {
 
       <div className="pdf-frame-wrap">
         {pdfSrc ? (
-          <iframe className="pdf-frame" src={pdfSrc} title="Vista previa PDF" />
+          // key fuerza un iframe nuevo por versión del PDF — recarga garantizada.
+          <iframe key={pdfSrc} className="pdf-frame" src={pdfSrc} title="Vista previa PDF" />
         ) : (
           <div className="pdf-placeholder">
             Compilando el PDF por primera vez… (necesita `latexmk` instalado; revisa "Ver log" si
