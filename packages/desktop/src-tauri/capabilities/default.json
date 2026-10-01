@@ -18,6 +18,7 @@
     "fs:allow-mkdir",
     "fs:allow-exists",
     "fs:allow-read-file",
+    "fs:allow-read-dir",
     "fs:allow-stat",
     "fs:scope-appdata-recursive",
     "fs:scope-document-recursive",

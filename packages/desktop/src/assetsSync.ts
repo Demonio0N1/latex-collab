@@ -1,7 +1,8 @@
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
-import { stat } from "@tauri-apps/plugin-fs";
-import { resolveLocalMirrorPath, writeMirrorBinary } from "./localMirror";
+import { stat, readDir, readFile } from "@tauri-apps/plugin-fs";
+import { join } from "@tauri-apps/api/path";
+import { resolveLocalMirrorPath, resolveProjectMirrorDir, writeMirrorBinary } from "./localMirror";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
@@ -41,8 +42,45 @@ export class AssetsSync {
     this.provider.on("sync", (synced: boolean) => {
       if (!synced) return;
       void this.mirrorAll();
+      // El servidor NO persiste este canal (vive en su memoria): si se
+      // reinició, re-publicamos las imágenes que esta máquina ya tiene en
+      // disco, para que los demás (y los que se unan después) las reciban.
+      void this.seedFromDisk();
       this.emit();
     });
+  }
+
+  /** Re-publica al canal las imágenes locales de images/ que falten en el mapa. */
+  private async seedFromDisk(): Promise<void> {
+    try {
+      const projectDir = await resolveProjectMirrorDir(this.projectId, this.projectName);
+      const imagesDir = await join(projectDir, "images");
+      let entries: Awaited<ReturnType<typeof readDir>>;
+      try {
+        entries = await readDir(imagesDir);
+      } catch {
+        return; // aún no hay carpeta images/ en esta máquina
+      }
+      for (const entry of entries) {
+        const name = entry.name;
+        if (!name || entry.isDirectory || name.startsWith(".")) continue;
+        if (!/\.(png|jpe?g|pdf|eps)$/i.test(name)) continue; // solo imágenes, nada de .aux
+        const rel = `images/${name}`;
+        if (this.map.has(rel)) continue;
+        try {
+          const bytes = await readFile(await join(imagesDir, name));
+          if (bytes.byteLength > 0 && bytes.byteLength <= MAX_IMAGE_BYTES) {
+            this.map.set(rel, bytes);
+            this.mirrored.add(rel);
+          }
+        } catch (err) {
+          console.error(`no se pudo re-publicar la imagen local ${rel}`, err);
+        }
+      }
+      this.emit();
+    } catch (err) {
+      console.error("seedFromDisk falló", err);
+    }
   }
 
   /** Rutas relativas (p. ej. "images/foto.png") de todas las imágenes del proyecto. */
