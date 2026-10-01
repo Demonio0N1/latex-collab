@@ -55,7 +55,12 @@ export default function ShareDialog({ baseUrl, projectId, password, onClose }: S
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Compartir proyecto</h3>
+        <div className="modal-header">
+          <h3>Compartir proyecto</h3>
+          <button className="modal-close" onClick={onClose} aria-label="Cerrar">
+            ✕
+          </button>
+        </div>
         <p>Envía cualquiera de estas dos opciones a la otra persona (WhatsApp, correo, Slack...):</p>
 
         {looksPublic(baseUrl) && (

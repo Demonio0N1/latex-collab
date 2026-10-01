@@ -52,7 +52,12 @@ export default function JoinProjectModal({ defaultBaseUrl, onServerChange, initi
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Unirse a un proyecto</h3>
+        <div className="modal-header">
+          <h3>Unirse a un proyecto</h3>
+          <button className="modal-close" onClick={onClose} aria-label="Cerrar">
+            ✕
+          </button>
+        </div>
 
         <label>Pegar link de invitación</label>
         <input value={link} onChange={(e) => applyLink(e.target.value)} placeholder="latexcollab://192.168.1.20:5959/swift-falcon-482?key=..." autoFocus />

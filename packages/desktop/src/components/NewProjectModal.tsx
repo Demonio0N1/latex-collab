@@ -21,6 +21,13 @@ const TEMPLATE_LABELS: Record<string, string> = {
   cv: "CV / Currículum",
 };
 
+const TEMPLATE_ICONS: Record<string, string> = {
+  article: "📄",
+  report: "📚",
+  beamer: "📽️",
+  cv: "👤",
+};
+
 interface NewProjectModalProps {
   baseUrl: string;
   onServerChange?: (url: string) => void;
@@ -141,7 +148,12 @@ export default function NewProjectModal({ baseUrl, onServerChange, onClose, onRe
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Nuevo proyecto</h3>
+        <div className="modal-header">
+          <h3>Nuevo proyecto</h3>
+          <button className="modal-close" onClick={onClose} aria-label="Cerrar">
+            ✕
+          </button>
+        </div>
 
         <label>Servidor</label>
         <input
@@ -165,10 +177,12 @@ export default function NewProjectModal({ baseUrl, onServerChange, onClose, onRe
         <label>Plantilla</label>
         <div className="template-gallery">
           <button className={template === undefined ? "template-card active" : "template-card"} onClick={() => setTemplate(undefined)}>
+            <span className="template-icon">✨</span>
             En blanco
           </button>
           {templates.map((t) => (
             <button key={t} className={template === t ? "template-card active" : "template-card"} onClick={() => setTemplate(t)}>
+              <span className="template-icon">{TEMPLATE_ICONS[t] ?? "📄"}</span>
               {TEMPLATE_LABELS[t] ?? t}
             </button>
           ))}

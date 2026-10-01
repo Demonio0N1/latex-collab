@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { onOpenUrl, getCurrent as getCurrentDeepLinkUrls } from "@tauri-apps/plugin-deep-link";
 import type { JoinProjectResponse, ProjectFile } from "@latex-collab/shared";
 import Sidebar from "./components/Sidebar";
@@ -60,6 +60,15 @@ export default function App() {
   // Last server the user pointed at (e.g. the Raspberry Pi), remembered so
   // both "new" and "join" default to it instead of always localhost.
   const [serverUrl, setServerUrl] = useState<string>(() => loadServerUrl());
+
+  // Avisos no bloqueantes (reemplazan a alert(), que en móvil estorba o ni aparece).
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 4500);
+  }, []);
 
   const rememberServer = useCallback((url: string) => {
     const clean = url.trim().replace(/\/+$/, "");
@@ -178,7 +187,7 @@ export default function App() {
       const joined = await joinProject(project.baseUrl, project.id, { password: project.password });
       openSession({ ...joined, baseUrl: project.baseUrl, password: project.password });
     } catch (err) {
-      alert(`No se pudo abrir "${project.name}": ${String(err instanceof Error ? err.message : err)}`);
+      showToast(`No se pudo abrir "${project.name}": ${String(err instanceof Error ? err.message : err)}`);
     }
   }
 
@@ -212,7 +221,7 @@ export default function App() {
       openFile(name);
       setMobileDrawer("none");
     } catch (err) {
-      alert(`No se pudo crear el archivo: ${String(err instanceof Error ? err.message : err)}`);
+      showToast(`No se pudo crear el archivo: ${String(err instanceof Error ? err.message : err)}`);
     }
   }
 
@@ -330,6 +339,11 @@ export default function App() {
             openSession(session);
           }}
         />
+      )}
+      {toast && (
+        <div className="toast" onClick={() => setToast(null)}>
+          {toast}
+        </div>
       )}
       {showShare && session && (
         <ShareDialog

@@ -16,7 +16,7 @@ val tauriProperties = Properties().apply {
 // Firma del build release. keystore.properties (ignorado por git) apunta al
 // keystore local; si no existe, el release sale sin firmar (igual que antes).
 val keyProperties = Properties().apply {
-    val propFile = file("keystore.properties")
+    val propFile = rootProject.file("keystore.properties")
     if (propFile.exists()) {
         propFile.inputStream().use { load(it) }
     }
@@ -35,7 +35,7 @@ android {
     }
     signingConfigs {
         create("release") {
-            if (file("keystore.properties").exists()) {
+            if (rootProject.file("keystore.properties").exists()) {
                 keyAlias = keyProperties["keyAlias"] as String
                 keyPassword = keyProperties["password"] as String
                 storeFile = file(keyProperties["storeFile"] as String)
@@ -56,7 +56,7 @@ android {
             }
         }
         getByName("release") {
-            if (file("keystore.properties").exists()) {
+            if (rootProject.file("keystore.properties").exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
             isMinifyEnabled = true
