@@ -176,6 +176,35 @@ en los servidores de GitHub.
   previa de PDF (en Windows se recomienda **TeX Live**, cuyo `latexmk`
   funciona de fábrica).
 
+## App Android (experimental)
+
+La misma app corre en Android vía Tauri 2. Igual que en iOS, **sin "Vista
+previa PDF"** (compilar LaTeX es de escritorio); crear/editar/compartir en
+tiempo real funciona completo. Para compilar el APK desde una Mac:
+
+```bash
+# Herramientas (una sola vez)
+brew install openjdk@17 && brew install --cask android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+yes | "$SDKM" --sdk_root="$ANDROID_HOME" --licenses
+"$SDKM" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-34" \
+  "build-tools;34.0.0" "ndk;27.2.12479018"
+rustup target add aarch64-linux-android
+export NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
+
+# Compilar el APK (debug, ARM64)
+cd packages/desktop
+npx tauri android build --apk --target aarch64 --debug
+```
+
+El APK queda en
+`packages/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/`.
+Se instala pasándolo al teléfono (aceptar "instalar apps desconocidas") o con
+`adb install` por USB. Para publicar en Play Store hará falta un build
+release firmado con keystore (+ cuenta de Google Play, $25 una vez).
+
 ## Abrir la app: ícono y comando de terminal
 
 - **Linux**: al instalar el `.deb` o integrar el `.AppImage`, la app aparece
