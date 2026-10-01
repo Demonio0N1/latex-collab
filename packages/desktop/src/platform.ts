@@ -20,3 +20,5 @@ export const IS_MOBILE_OS = IS_IOS || IS_ANDROID;
 
 /** Desktop-only features: local LaTeX compilation, "open with…", and choosing a local project folder. */
 export const SUPPORTS_LOCAL_TOOLS = !IS_MOBILE_OS;
+
+export const IS_MACOS = currentPlatform() === "macos";

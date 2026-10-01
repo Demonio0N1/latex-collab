@@ -21,7 +21,15 @@
     "fs:allow-stat",
     "fs:scope-appdata-recursive",
     "fs:scope-document-recursive",
-    "opener:allow-open-path",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        { "path": "$DOCUMENT/LaTeX Projects" },
+        { "path": "$DOCUMENT/LaTeX Projects/**" },
+        { "path": "$APPDATA" },
+        { "path": "$APPDATA/**" }
+      ]
+    },
     "opener:allow-open-url",
     "dialog:allow-open",
     "deep-link:default",

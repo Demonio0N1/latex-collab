@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { openPath } from "@tauri-apps/plugin-opener";
 import PresenceStack from "./PresenceStack";
-import { SUPPORTS_LOCAL_TOOLS } from "../platform";
+import { SUPPORTS_LOCAL_TOOLS, IS_MACOS } from "../platform";
 
 interface ProjectHeaderProps {
   projectName: string;
@@ -79,7 +79,7 @@ export default function ProjectHeader({
                 onClick={() => openPath(localDirPath).catch((err) => setStatus(`No se pudo abrir la carpeta: ${String(err)}`))}
                 title={`Carpeta local del proyecto:\n${localDirPath}`}
               >
-                📂 Carpeta
+                📂 {IS_MACOS ? "Abrir en Finder" : "Abrir carpeta"}
               </button>
             )}
             <button onClick={onTogglePreview} className={`desktop-only ${showPreview ? "active-toggle" : ""}`}>
@@ -95,7 +95,12 @@ export default function ProjectHeader({
         )}
         <button className="btn-accent" onClick={onShare}>Compartir</button>
         {onTogglePeople && (
-          <button className="icon-button mobile-only" onClick={onTogglePeople} title="Archivos y colaboradores" aria-label="Archivos y colaboradores">
+          <button
+            className="icon-button"
+            onClick={onTogglePeople}
+            title="Mostrar/ocultar archivos y colaboradores"
+            aria-label="Mostrar/ocultar archivos y colaboradores"
+          >
             ⋯
           </button>
         )}

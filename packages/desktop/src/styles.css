@@ -1073,6 +1073,10 @@ textarea:focus {
   .shell.has-session.nav-hidden .drawer-nav {
     display: none;
   }
+  /* Lo mismo para el panel derecho (archivos + colaboradores), con el botón ⋯ */
+  .shell.has-session.panel-hidden .right-panel {
+    display: none;
+  }
 }
 
 .modal-backdrop {

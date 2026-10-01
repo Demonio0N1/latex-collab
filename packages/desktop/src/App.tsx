@@ -87,6 +87,30 @@ export default function App() {
     });
   }, []);
 
+  // Panel derecho (archivos + colaboradores) ocultable en escritorio.
+  const [panelHidden, setPanelHidden] = useState(() => {
+    try {
+      return localStorage.getItem("latex-collab:panelHidden") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const togglePanel = useCallback(() => {
+    if (window.matchMedia("(max-width: 820px)").matches) {
+      setMobileDrawer((d) => (d === "panel" ? "none" : "panel"));
+      return;
+    }
+    setPanelHidden((h) => {
+      const next = !h;
+      try {
+        localStorage.setItem("latex-collab:panelHidden", next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
   // Imágenes sincronizadas usuario-a-usuario (canal CRDT, no tocan el disco del servidor).
   const assetsRef = useRef<AssetsSync | null>(null);
   const [assetNames, setAssetNames] = useState<string[]>([]);
@@ -307,7 +331,7 @@ export default function App() {
 
   return (
     <div
-      className={`shell ${session ? "has-session" : "no-session"}${navHidden ? " nav-hidden" : ""}`}
+      className={`shell ${session ? "has-session" : "no-session"}${navHidden ? " nav-hidden" : ""}${panelHidden ? " panel-hidden" : ""}`}
       data-drawer={mobileDrawer}
     >
       {mobileDrawer !== "none" && <div className="drawer-backdrop" onClick={() => setMobileDrawer("none")} />}
@@ -346,7 +370,7 @@ export default function App() {
               peers={peers}
               selfName={userName}
               onToggleNav={toggleNav}
-              onTogglePeople={() => setMobileDrawer((d) => (d === "panel" ? "none" : "panel"))}
+              onTogglePeople={togglePanel}
               onTogglePreview={() => setShowPreview((s) => !s)}
               onShare={() => setShowShare(true)}
             />
