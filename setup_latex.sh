@@ -220,7 +220,15 @@ install_rust() {
     return 0
   fi
   info "Instalando Rust vía rustup..."
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  if ! curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; then
+    # Caso real: rustup falla si un perfil de shell (p. ej. ~/.tcshrc) existe
+    # pero no es escribible por el usuario (Macs administradas, dotfiles de
+    # root). Reintentamos sin tocar perfiles: Rust queda instalado igual.
+    warn "rustup no pudo editar un perfil del shell (¿~/.tcshrc sin permiso de escritura?)."
+    warn "Reintentando sin modificar perfiles (--no-modify-path)..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+    warn "Para terminales futuras agrega a tu perfil:  source \$HOME/.cargo/env"
+  fi
   # shellcheck disable=SC1091
   . "$HOME/.cargo/env"
   ok "Rust instalado: $(rustc --version)"
