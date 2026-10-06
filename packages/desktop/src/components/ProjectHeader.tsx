@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { openPath } from "@tauri-apps/plugin-opener";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import PresenceStack from "./PresenceStack";
+import { getTexDir, setTexDir } from "../latexCompiler";
 import { SUPPORTS_LOCAL_TOOLS, IS_MACOS } from "../platform";
 
 interface ProjectHeaderProps {
@@ -36,6 +38,25 @@ export default function ProjectHeader({
   const [appName, setAppName] = useState(() => localStorage.getItem(CUSTOM_COMMAND_KEY) ?? "");
   const [showSettings, setShowSettings] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [texDir, setTexDirState] = useState(() => getTexDir());
+
+  async function pickTexDir() {
+    const picked = await openDialog({ directory: true, defaultPath: texDir || undefined });
+    if (typeof picked !== "string") return;
+    try {
+      await setTexDir(picked);
+      setTexDirState(picked);
+      setStatus("Carpeta de LaTeX aplicada — cierra y vuelve a abrir la Vista previa PDF.");
+    } catch (err) {
+      setStatus(`No se pudo aplicar la carpeta: ${String(err)}`);
+    }
+  }
+
+  async function clearTexDir() {
+    await setTexDir("");
+    setTexDirState("");
+    setStatus("Se usará la detección automática (PATH del sistema) al reiniciar la app.");
+  }
 
   async function handleOpen() {
     if (!localFilePath) return;
@@ -113,6 +134,17 @@ export default function ProjectHeader({
             value={appName}
             onChange={(e) => saveAppName(e.target.value)}
           />
+
+          <label>Carpeta del compilador LaTeX (donde está `latexmk`)</label>
+          <div className="copy-row">
+            <input readOnly value={texDir} placeholder="Automático (PATH del sistema)" title={texDir || undefined} />
+            <button onClick={pickTexDir}>Elegir…</button>
+            {texDir && <button onClick={clearTexDir}>Quitar</button>}
+          </div>
+          <div className="hint">
+            Úsalo si la vista previa dice "latexmk: command not found". Ej.:
+            /usr/local/texlive/2026/bin/universal-darwin
+          </div>
         </div>
       )}
       {status && <div className="status-banner">{status}</div>}

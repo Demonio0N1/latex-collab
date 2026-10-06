@@ -15,6 +15,7 @@ import PdfPreview from "./components/PdfPreview";
 import WelcomeScreen from "./components/WelcomeScreen";
 import { joinProject, parseShareLink, listProjectFiles, downloadProjectFile, uploadProjectFile } from "./api";
 import { AssetsSync } from "./assetsSync";
+import { applyStoredTexDir } from "./latexCompiler";
 import { SUPPORTS_LOCAL_TOOLS } from "./platform";
 import { listRecentProjects, removeRecentProject, upsertRecentProject, type RecentProject } from "./recentProjects";
 import { resolveProjectMirrorDir, mirrorFileExists, writeMirrorBinary } from "./localMirror";
@@ -145,6 +146,11 @@ export default function App() {
     localStorage.setItem(USER_NAME_KEY, generated);
     return generated;
   });
+
+  // Si el usuario eligió dónde vive su compilador LaTeX, aplicarlo al PATH.
+  useEffect(() => {
+    if (SUPPORTS_LOCAL_TOOLS) void applyStoredTexDir();
+  }, []);
 
   const handlePresenceChange = useCallback((p: { name: string; color: string }[]) => setPeers(p), []);
   const handleLocalPathReady = useCallback((p: string | null) => setLocalFilePath(p), []);

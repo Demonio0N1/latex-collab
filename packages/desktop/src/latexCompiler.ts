@@ -1,8 +1,40 @@
 import { Command, type Child } from "@tauri-apps/plugin-shell";
+import { invoke } from "@tauri-apps/api/core";
 
 export type LatexEngine = "pdflatex" | "xelatex" | "lualatex";
 
 const ENGINE_KEY = "latex-collab:engine";
+const TEX_DIR_KEY = "latex-collab:texBinDir";
+
+/** Carpeta elegida por el usuario donde vive su compilador LaTeX (latexmk). */
+export function getTexDir(): string {
+  try {
+    return localStorage.getItem(TEX_DIR_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export async function setTexDir(dir: string): Promise<void> {
+  try {
+    if (dir) localStorage.setItem(TEX_DIR_KEY, dir);
+    else localStorage.removeItem(TEX_DIR_KEY);
+  } catch {
+    /* ignore */
+  }
+  if (dir) await invoke("register_tex_path", { dir });
+}
+
+/** Al arrancar la app: re-aplica la carpeta guardada al PATH del proceso. */
+export async function applyStoredTexDir(): Promise<void> {
+  const dir = getTexDir();
+  if (!dir) return;
+  try {
+    await invoke("register_tex_path", { dir });
+  } catch (err) {
+    console.error("no se pudo registrar la carpeta de LaTeX", err);
+  }
+}
 
 export function getEngine(): LatexEngine {
   return (localStorage.getItem(ENGINE_KEY) as LatexEngine | null) ?? "pdflatex";

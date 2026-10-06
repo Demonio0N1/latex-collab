@@ -15,12 +15,26 @@ fn extend_path_for_gui_launch() {
     std::env::set_var("PATH", parts.join(":"));
 }
 
+/// El usuario puede señalar desde la app la carpeta donde vive su compilador
+/// LaTeX (latexmk) — p. ej. /usr/local/texlive/2026/bin/universal-darwin — y
+/// aquí se antepone al PATH del proceso, para que los spawns de latexmk la
+/// encuentren aunque no esté en las rutas típicas.
+#[tauri::command]
+fn register_tex_path(dir: String) {
+    let sep = if cfg!(windows) { ";" } else { ":" };
+    let current = std::env::var("PATH").unwrap_or_default();
+    if !current.split(sep).any(|p| p == dir) {
+        std::env::set_var("PATH", format!("{dir}{sep}{current}"));
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     #[cfg(target_os = "macos")]
     extend_path_for_gui_launch();
 
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![register_tex_path])
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
