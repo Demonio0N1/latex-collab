@@ -2,7 +2,7 @@ import { useState } from "react";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import PresenceStack from "./PresenceStack";
-import { getTexDir, setTexDir } from "../latexCompiler";
+import { getTexDir, setTexDir, findLatexmk } from "../latexCompiler";
 import { SUPPORTS_LOCAL_TOOLS, IS_MACOS } from "../platform";
 
 interface ProjectHeaderProps {
@@ -56,6 +56,27 @@ export default function ProjectHeader({
     await setTexDir("");
     setTexDirState("");
     setStatus("Se usará la detección automática (PATH del sistema) al reiniciar la app.");
+  }
+
+  async function detectTexDir() {
+    try {
+      const found = await findLatexmk();
+      if (!found || found.length === 0) {
+        setStatus(
+          'No encontré latexmk en las rutas conocidas. Instala MacTeX/TeX Live, o corre "which latexmk" en una terminal y usa "Elegir…" con esa carpeta.'
+        );
+        return;
+      }
+      await setTexDir(found[0]);
+      setTexDirState(found[0]);
+      setStatus(
+        found.length === 1
+          ? `latexmk encontrado en: ${found[0]} — reabre la Vista previa PDF.`
+          : `Encontrado en ${found.length} lugares; usando ${found[0]}. Otros: ${found.slice(1).join(" · ")}`
+      );
+    } catch (err) {
+      setStatus(`La detección falló: ${String(err)}`);
+    }
   }
 
   async function handleOpen() {
@@ -138,6 +159,7 @@ export default function ProjectHeader({
           <label>Carpeta del compilador LaTeX (donde está `latexmk`)</label>
           <div className="copy-row">
             <input readOnly value={texDir} placeholder="Automático (PATH del sistema)" title={texDir || undefined} />
+            <button onClick={detectTexDir}>Detectar</button>
             <button onClick={pickTexDir}>Elegir…</button>
             {texDir && <button onClick={clearTexDir}>Quitar</button>}
           </div>

@@ -25,6 +25,11 @@ export async function setTexDir(dir: string): Promise<void> {
   if (dir) await invoke("register_tex_path", { dir });
 }
 
+/** Carpetas donde la app encontró latexmk (la del PATH actual primero). */
+export function findLatexmk(): Promise<string[]> {
+  return invoke<string[]>("find_latexmk");
+}
+
 /** Al arrancar la app: re-aplica la carpeta guardada al PATH del proceso. */
 export async function applyStoredTexDir(): Promise<void> {
   const dir = getTexDir();
