@@ -139,13 +139,21 @@ export default function App() {
     }
   }, []);
 
-  const [userName] = useState(() => {
+  const [userName, setUserName] = useState(() => {
     const existing = localStorage.getItem(USER_NAME_KEY);
     if (existing) return existing;
     const generated = `Usuario-${Math.random().toString(36).slice(2, 6)}`;
     localStorage.setItem(USER_NAME_KEY, generated);
     return generated;
   });
+  const changeUserName = useCallback((name: string) => {
+    setUserName(name);
+    try {
+      localStorage.setItem(USER_NAME_KEY, name);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // Si el usuario eligió dónde vive su compilador LaTeX, aplicarlo al PATH.
   useEffect(() => {
@@ -364,7 +372,12 @@ export default function App() {
 
       <div className="main-column">
         {!session ? (
-          <WelcomeScreen onNewProject={() => setShowNewModal(true)} onJoinProject={() => setShowJoinModal(true)} />
+          <WelcomeScreen
+            onNewProject={() => setShowNewModal(true)}
+            onJoinProject={() => setShowJoinModal(true)}
+            userName={userName}
+            onUserNameChange={changeUserName}
+          />
         ) : (
           <>
             <ProjectHeader

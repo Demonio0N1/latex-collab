@@ -1064,6 +1064,71 @@ textarea:focus {
 
 /* ---------- modals ---------- */
 
+/* Campo "Tu nombre" en la bienvenida */
+.welcome-name {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.welcome-name label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.welcome-name input {
+  width: min(280px, 80vw);
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* Guía amable cuando falta instalar LaTeX */
+.pdf-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  padding: 28px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+.pdf-setup-icon {
+  font-size: 36px;
+}
+.pdf-setup h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+.pdf-setup p {
+  margin: 0;
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.pdf-setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.pdf-setup-actions button {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
 /* Barra lateral ocultable con el botón ☰ del encabezado (solo escritorio;
    en pantallas chicas la barra ya funciona como drawer deslizante).
    Solo aplica DENTRO de un proyecto: en la pantalla inicial la barra se

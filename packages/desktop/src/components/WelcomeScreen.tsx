@@ -3,6 +3,8 @@ import { BrandMark } from "./BrandMark";
 interface WelcomeScreenProps {
   onNewProject: () => void;
   onJoinProject: () => void;
+  userName: string;
+  onUserNameChange: (name: string) => void;
 }
 
 const FEATURES = [
@@ -11,7 +13,7 @@ const FEATURES = [
   { icon: "📄", title: "Vista previa de PDF", desc: "Compila y ve el resultado al lado del editor, con tu propio LaTeX." },
 ];
 
-export default function WelcomeScreen({ onNewProject, onJoinProject }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onNewProject, onJoinProject, userName, onUserNameChange }: WelcomeScreenProps) {
   return (
     <div className="welcome">
       <div className="welcome-inner">
@@ -22,6 +24,17 @@ export default function WelcomeScreen({ onNewProject, onJoinProject }: WelcomeSc
         <p className="welcome-subtitle">
           Editor de LaTeX colaborativo, autoalojado. Crea un proyecto o únete a uno para empezar.
         </p>
+
+        <div className="welcome-name">
+          <label htmlFor="welcome-name-input">Tu nombre (así te verán los demás mientras editan contigo)</label>
+          <input
+            id="welcome-name-input"
+            value={userName}
+            onChange={(e) => onUserNameChange(e.target.value)}
+            placeholder="ej: Gary"
+            maxLength={30}
+          />
+        </div>
 
         <div className="welcome-cta">
           <button className="welcome-btn primary" onClick={onNewProject}>

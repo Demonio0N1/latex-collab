@@ -22,3 +22,4 @@ export const IS_MOBILE_OS = IS_IOS || IS_ANDROID;
 export const SUPPORTS_LOCAL_TOOLS = !IS_MOBILE_OS;
 
 export const IS_MACOS = currentPlatform() === "macos";
+export const IS_WINDOWS = currentPlatform() === "windows";
