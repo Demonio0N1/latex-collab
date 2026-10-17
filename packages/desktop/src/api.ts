@@ -102,6 +102,36 @@ export async function uploadProjectFile(
   return res.json();
 }
 
+/** Compila el proyecto EN EL SERVIDOR (modo navegador) y devuelve ok + log. */
+export function compileOnServer(
+  baseUrl: string,
+  projectId: string,
+  token: string,
+  relativePath: string,
+  engine: string
+): Promise<{ ok: boolean; log: string }> {
+  return request(baseUrl, `/api/projects/${projectId}/compile`, {
+    method: "POST",
+    headers: authHeader(token),
+    body: JSON.stringify({ path: relativePath, engine }),
+  });
+}
+
+/** Descarga el PDF compilado en el servidor para el .tex indicado. */
+export async function fetchCompiledPdf(
+  baseUrl: string,
+  projectId: string,
+  token: string,
+  relativePath: string
+): Promise<Blob> {
+  const res = await fetch(
+    `${baseUrl}/api/projects/${projectId}/compile/pdf?path=${encodeURIComponent(relativePath)}`,
+    { headers: authHeader(token) }
+  );
+  if (!res.ok) throw new ApiError(`PDF no disponible (${res.status})`);
+  return res.blob();
+}
+
 export async function downloadProjectFile(baseUrl: string, projectId: string, token: string, relativePath: string): Promise<Uint8Array> {
   const res = await fetch(`${baseUrl}/api/projects/${projectId}/files/download?path=${encodeURIComponent(relativePath)}`, {
     headers: authHeader(token),

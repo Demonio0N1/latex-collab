@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "server:dev": "npm run dev --workspace=@latex-collab/server",
-    "desktop:dev": "npm run tauri:dev --workspace=@latex-collab/desktop"
+    "desktop:dev": "npm run tauri:dev --workspace=@latex-collab/desktop",
+    "web:build": "npm run web:build --workspace=@latex-collab/desktop"
   }
 }

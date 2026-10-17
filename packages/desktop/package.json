@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "web:build": "tsc -b && VITE_BASE=/app/ vite build --outDir ../server/public/app --emptyOutDir"
   },
   "dependencies": {
     "@codemirror/commands": "^6.7.1",

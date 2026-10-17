@@ -1,5 +1,7 @@
 import fs from "node:fs";
+import path from "node:path";
 import * as Y from "yjs";
+import { resolveSafePath } from "./fileTree.js";
 import { WebSocket } from "ws";
 import * as syncProtocol from "y-protocols/sync";
 import * as awarenessProtocol from "y-protocols/awareness";
@@ -138,6 +140,31 @@ export class DocRoom {
 }
 
 const rooms = new Map<string, DocRoom>();
+
+/**
+ * Vuelca al disco del proyecto las imágenes que viajan por el canal CRDT
+ * "__assets__" (que normalmente NO se persisten en el servidor). Se usa justo
+ * antes de compilar en el servidor: latexmk necesita los archivos reales para
+ * que \includegraphics{images/...} funcione.
+ */
+export function materializeAssets(projectId: string, rootPath: string): void {
+  const room = rooms.get(`${projectId}::__assets__`);
+  if (!room) return;
+  const files = room.doc.getMap<Uint8Array>("files");
+  for (const [relative, bytes] of files.entries()) {
+    if (!(bytes instanceof Uint8Array) || bytes.byteLength === 0) continue;
+    try {
+      const absolute = resolveSafePath(rootPath, relative);
+      const current = fs.existsSync(absolute) ? fs.statSync(absolute).size : -1;
+      if (current !== bytes.byteLength) {
+        fs.mkdirSync(path.dirname(absolute), { recursive: true });
+        fs.writeFileSync(absolute, bytes);
+      }
+    } catch {
+      /* ruta inválida: se ignora */
+    }
+  }
+}
 
 export function getOrCreateRoom(roomId: string, absoluteFilePath: string, persist = true): DocRoom {
   let room = rooms.get(roomId);

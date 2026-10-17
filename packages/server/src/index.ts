@@ -1,6 +1,8 @@
 import http from "node:http";
 import https from "node:https";
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
 import { WebSocketServer } from "ws";
@@ -18,6 +20,17 @@ app.use(express.json());
 app.use("/api", projectsRouter);
 app.use(openRouter);
 app.get("/health", (_req, res) => res.json({ ok: true }));
+
+// Editor web (modo navegador, estilo Overleaf): el build de Vite del mismo
+// frontend, generado con `npm run web:build` en packages/server/public/app.
+// Si existe, se sirve en /app y la raíz redirige ahí.
+const WEB_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../public/app");
+if (fs.existsSync(path.join(WEB_DIR, "index.html"))) {
+  app.use("/app", express.static(WEB_DIR));
+  app.get("/app/*", (_req, res) => res.sendFile(path.join(WEB_DIR, "index.html")));
+  app.get("/", (_req, res) => res.redirect("/app"));
+  console.log(`editor web disponible en /app (${WEB_DIR})`);
+}
 
 // Serve HTTPS directly when a cert+key are configured (e.g. a VPS with a
 // Let's Encrypt cert); otherwise plain HTTP (fine on loopback, or behind

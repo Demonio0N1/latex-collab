@@ -16,7 +16,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import { joinProject, parseShareLink, listProjectFiles, downloadProjectFile, uploadProjectFile } from "./api";
 import { AssetsSync } from "./assetsSync";
 import { applyStoredTexDir } from "./latexCompiler";
-import { SUPPORTS_LOCAL_TOOLS } from "./platform";
+import { IS_WEB, SUPPORTS_LOCAL_TOOLS } from "./platform";
 import { listRecentProjects, removeRecentProject, upsertRecentProject, type RecentProject } from "./recentProjects";
 import { resolveProjectMirrorDir, mirrorFileExists, writeMirrorBinary } from "./localMirror";
 import { join as joinPath } from "@tauri-apps/api/path";
@@ -27,10 +27,10 @@ type Session = JoinProjectResponse & { baseUrl: string; password: string };
 
 const USER_NAME_KEY = "latex-collab:userName";
 const SERVER_URL_KEY = "latex-collab:serverUrl";
-// Default server the app points at on first run. This deployment hosts the
-// collaboration server on a Raspberry Pi exposed via Tailscale Funnel; the
-// user can still change it in the New/Join dialogs (remembered afterwards).
-const DEFAULT_BASE_URL = "https://pi5-oaq.tail61fec5.ts.net";
+// Default server the app points at on first run. In the WEB editor it's
+// always the same server that served the page; in the native apps it's this
+// deployment's Raspberry Pi (editable and remembered in the dialogs).
+const DEFAULT_BASE_URL = IS_WEB ? window.location.origin : "https://pi5-oaq.tail61fec5.ts.net";
 
 const isLoopbackUrl = (url: string) => /localhost|127\.0\.0\.1/.test(url);
 
@@ -197,6 +197,20 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (IS_WEB) {
+      // Modo navegador: el link de invitación llega como /app?id=...&key=...
+      // → unirse automáticamente al proyecto.
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      const key = params.get("key");
+      if (id && key) {
+        joinProject(window.location.origin, id, { password: key })
+          .then((joined) => openSession({ ...joined, baseUrl: window.location.origin, password: key }))
+          .catch((err) => showToast(`No se pudo entrar al proyecto: ${String(err instanceof Error ? err.message : err)}`));
+      }
+      return;
+    }
+
     // Cold start: the OS launched the app directly from a clicked link.
     getCurrentDeepLinkUrls()
       .then((urls) => {
@@ -212,6 +226,7 @@ export default function App() {
     return () => {
       unlisten.then((fn) => fn());
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleIncomingLink]);
 
   useEffect(() => {
@@ -227,6 +242,10 @@ export default function App() {
       }
       if (stopped) return;
       setFiles(latest);
+
+      // El espejo local solo existe en escritorio (en el navegador y móvil
+      // no hay compilación local que lo necesite).
+      if (!SUPPORTS_LOCAL_TOOLS) return;
 
       // Someone else's inserted image won't compile locally until we have
       // its bytes too — fetch anything image-kind we don't have yet.
@@ -254,8 +273,10 @@ export default function App() {
   }, [session]);
 
   // Canal de imágenes del proyecto abierto: vive mientras dure la sesión.
+  // En el navegador no se usa: ahí las imágenes se suben al servidor (que es
+  // además quien compila), así que el árbol ya las lista por la API.
   useEffect(() => {
-    if (!session) {
+    if (!session || IS_WEB) {
       setAssetNames([]);
       return;
     }
@@ -413,7 +434,15 @@ export default function App() {
                   />
                 ))}
               </div>
-              {showPreview && <PdfPreview texFilePath={localFilePath} />}
+              {showPreview && (
+                <PdfPreview
+                  texFilePath={localFilePath}
+                  baseUrl={session.baseUrl}
+                  projectId={session.project.id}
+                  token={session.token}
+                  filePath={activeFile}
+                />
+              )}
               <div className={`right-panel drawer-panel ${mobileDrawer === "panel" ? "open" : ""}`}>
                 <button className="new-file-btn" onClick={handleNewFile}>
                   + Nuevo archivo

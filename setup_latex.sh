@@ -420,6 +420,18 @@ npm install
 ok "Dependencias del proyecto instaladas."
 echo
 
+# En el servidor: compilar el editor web (modo navegador, estilo Overleaf) y
+# ofrecer instalar LaTeX para que el servidor compile los PDFs de quienes
+# editan desde el browser.
+if [ "$MODE" = "server" ]; then
+  info "Compilando el editor web (los colaboradores podrán editar desde el navegador en /app)..."
+  npm run web:build
+  ok "Editor web listo — se sirve en https://<tu-servidor>/app"
+  echo
+  install_latex_distribution
+  echo
+fi
+
 # ---------------------------------------------------------------------------
 # 7. Compilar e instalar la app de verdad (con ícono de menú y el comando
 #    de terminal "latex_collab") — "npm install" no compila la app, así

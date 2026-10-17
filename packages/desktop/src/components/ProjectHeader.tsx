@@ -3,7 +3,7 @@ import { openPath } from "@tauri-apps/plugin-opener";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import PresenceStack from "./PresenceStack";
 import { getTexDir, setTexDir, findLatexmk } from "../latexCompiler";
-import { SUPPORTS_LOCAL_TOOLS, IS_MACOS } from "../platform";
+import { SUPPORTS_LOCAL_TOOLS, IS_MACOS, IS_WEB } from "../platform";
 
 interface ProjectHeaderProps {
   projectName: string;
@@ -113,6 +113,11 @@ export default function ProjectHeader({
       <div className="project-header-actions">
         <PresenceStack peers={peers} selfName={selfName} />
         <span className="header-sep" />
+        {(SUPPORTS_LOCAL_TOOLS || IS_WEB) && (
+          <button onClick={onTogglePreview} className={`desktop-only ${showPreview ? "active-toggle" : ""}`}>
+            {showPreview ? "Ocultar PDF" : "Vista previa PDF"}
+          </button>
+        )}
         {SUPPORTS_LOCAL_TOOLS && (
           <>
             {localDirPath && (
@@ -124,9 +129,6 @@ export default function ProjectHeader({
                 📂 {IS_MACOS ? "Abrir en Finder" : "Abrir carpeta"}
               </button>
             )}
-            <button onClick={onTogglePreview} className={`desktop-only ${showPreview ? "active-toggle" : ""}`}>
-              {showPreview ? "Ocultar PDF" : "Vista previa PDF"}
-            </button>
             <button className="desktop-only" onClick={handleOpen} disabled={!localFilePath} title={localFilePath ?? undefined}>
               Abrir con…
             </button>

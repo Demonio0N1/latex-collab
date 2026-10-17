@@ -11,6 +11,8 @@ import { randomColor } from "@latex-collab/shared";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { resolveLocalMirrorPath, writeMirror } from "../localMirror";
+import { uploadProjectFile } from "../api";
+import { IS_WEB, SUPPORTS_LOCAL_TOOLS } from "../platform";
 import { wrapSelection, insertTemplate } from "../codeMirrorSnippets";
 import EditorToolbar from "./EditorToolbar";
 
@@ -29,6 +31,15 @@ interface EditorProps {
 }
 
 const MIRROR_DEBOUNCE_MS = 800;
+
+/** LaTeX no tolera espacios/acentos/paréntesis en nombres de archivo. */
+function safeImageName(rawName: string): string {
+  const dot = rawName.lastIndexOf(".");
+  const base =
+    (dot > 0 ? rawName.slice(0, dot) : rawName).replace(/[^a-zA-Z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") || "imagen";
+  const ext = dot > 0 ? rawName.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "") : "png";
+  return `${base}.${ext}`;
+}
 
 /**
  * Every open tab keeps its own Editor mounted (just hidden via the `active`
@@ -95,14 +106,16 @@ export default function Editor({
 
     const ytext = ydoc.getText("content");
 
-    resolveLocalMirrorPath(projectId, projectName, filePath).then((path) => {
-      if (disposed) return;
-      localPath = path;
-      latestPathRef.current = path;
-      localPathRef.current = path;
-      if (activeRef.current) onLocalPathReady(path);
-      writeMirror(path, ytext.toString()).catch((err) => console.error("mirror write failed", err));
-    });
+    if (SUPPORTS_LOCAL_TOOLS) {
+      resolveLocalMirrorPath(projectId, projectName, filePath).then((path) => {
+        if (disposed) return;
+        localPath = path;
+        latestPathRef.current = path;
+        localPathRef.current = path;
+        if (activeRef.current) onLocalPathReady(path);
+        writeMirror(path, ytext.toString()).catch((err) => console.error("mirror write failed", err));
+      });
+    }
 
     const scheduleMirror = () => {
       if (!localPath) return;
@@ -148,9 +161,43 @@ export default function Editor({
     if (view) fn(view);
   }
 
+  // Modo navegador: el selector de archivos del browser + subida al servidor
+  // (que además es quien compila, así que la imagen queda donde debe).
+  const webFileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleWebImagePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    const view = viewRef.current;
+    if (!file || !view) return;
+    setImageBusy(true);
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (bytes.byteLength === 0) throw new Error("La imagen llegó vacía (0 bytes).");
+      const relativePath = `images/${safeImageName(file.name)}`;
+      await uploadProjectFile(baseUrl, projectId, token, relativePath, bytes);
+      insertTemplate(
+        view,
+        "\\begin{figure}[h]\n  \\centering\n  \\includegraphics[width=0.8\\textwidth]{",
+        relativePath,
+        "}\n  \\caption{Descripción de la imagen}\n\\end{figure}\n"
+      );
+    } catch (err) {
+      console.error("insert image failed", err);
+      alert(`No se pudo insertar la imagen: ${String(err instanceof Error ? err.message : err)}`);
+    } finally {
+      setImageBusy(false);
+    }
+  }
+
   async function handleInsertImage() {
     const view = viewRef.current;
     if (!view || imageBusy) return;
+
+    if (IS_WEB) {
+      webFileInputRef.current?.click();
+      return;
+    }
 
     const picked = await openDialog({
       multiple: false,
@@ -164,15 +211,7 @@ export default function Editor({
       if (!bytes || bytes.byteLength === 0) {
         throw new Error(`No se pudo leer la imagen (0 bytes): ${picked}`);
       }
-      // LaTeX no tolera espacios/acentos/paréntesis en nombres de archivo:
-      // "Captura de pantalla (1).png" rompería la compilación en silencio.
-      const rawName = picked.split(/[\\/]/).pop()!;
-      const dot = rawName.lastIndexOf(".");
-      const base =
-        (dot > 0 ? rawName.slice(0, dot) : rawName).replace(/[^a-zA-Z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") ||
-        "imagen";
-      const ext = dot > 0 ? rawName.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "") : "png";
-      const relativePath = `images/${base}.${ext}`;
+      const relativePath = `images/${safeImageName(picked.split(/[\\/]/).pop()!)}`;
 
       // La imagen viaja por el canal CRDT a todos los colaboradores; cada
       // máquina (incluida esta) la guarda sola en su carpeta local images/.
@@ -224,6 +263,13 @@ export default function Editor({
         imageBusy={imageBusy}
       />
       <div ref={containerRef} className="editor-container" />
+      <input
+        ref={webFileInputRef}
+        type="file"
+        accept=".png,.jpg,.jpeg,.pdf,.eps,image/*"
+        style={{ display: "none" }}
+        onChange={handleWebImagePicked}
+      />
     </div>
   );
 }

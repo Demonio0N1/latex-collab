@@ -22,3 +22,4 @@ vite.config.js
 ios/build/
 ios/build-device/
 ios/**/xcuserdata/
+packages/server/public/

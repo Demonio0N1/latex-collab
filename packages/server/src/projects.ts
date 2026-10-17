@@ -12,6 +12,8 @@ import { rateLimit, clientIp, isTrulyLocal } from "./rateLimit.js";
 import { insertProject, getProject } from "./db.js";
 import { scanProjectFiles, resolveSafePath } from "./fileTree.js";
 import { issueToken, verifyToken } from "./sessionTokens.js";
+import { compileProject, isServerEngine } from "./compile.js";
+import { materializeAssets } from "./docRoom.js";
 import { detectTailscaleFunnelUrl } from "./tailscale.js";
 
 /** Bearer token (from /join) via Authorization header or ?token= query. */
@@ -181,6 +183,53 @@ router.get("/projects/:id/files/download", (req, res) => {
     return res.status(404).json({ error: "file not found" });
   }
   res.sendFile(targetPath);
+});
+
+/**
+ * Compila el proyecto EN EL SERVIDOR (modo navegador). El cliente web edita
+ * vía CRDT (el servidor ya persiste los .tex a disco) y aquí corremos
+ * latexmk sobre esos archivos. Devuelve ok + el log; el PDF se descarga por
+ * el endpoint de abajo.
+ */
+router.post("/projects/:id/compile", async (req, res) => {
+  if (!requireProjectAuth(req, res, req.params.id)) return;
+  const project = getProject(req.params.id);
+  if (!project) return res.status(404).json({ error: "project not found" });
+
+  const relative = typeof req.body?.path === "string" && req.body.path ? req.body.path : "main.tex";
+  const engine = isServerEngine(req.body?.engine) ? req.body.engine : "pdflatex";
+  let texPath: string;
+  try {
+    texPath = resolveSafePath(project.root_path, relative);
+  } catch {
+    return res.status(400).json({ error: "invalid path" });
+  }
+  if (!fs.existsSync(texPath)) return res.status(404).json({ error: "tex file not found" });
+
+  // Imágenes que viajan por el canal entre-usuarios: escribirlas al disco
+  // del proyecto para que \includegraphics las encuentre.
+  materializeAssets(project.id, project.root_path);
+
+  const result = await compileProject(project.id, texPath, engine);
+  res.json({ ok: result.ok, log: result.log });
+});
+
+/** Descarga el PDF compilado en el servidor para el .tex indicado. */
+router.get("/projects/:id/compile/pdf", (req, res) => {
+  if (!requireProjectAuth(req, res, req.params.id)) return;
+  const project = getProject(req.params.id);
+  if (!project) return res.status(404).json({ error: "project not found" });
+
+  const relative = typeof req.query.path === "string" && req.query.path ? req.query.path : "main.tex";
+  let pdfPath: string;
+  try {
+    pdfPath = resolveSafePath(project.root_path, relative.replace(/\.tex$/i, ".pdf"));
+  } catch {
+    return res.status(400).json({ error: "invalid path" });
+  }
+  if (!fs.existsSync(pdfPath)) return res.status(404).json({ error: "pdf not compiled yet" });
+  res.setHeader("Cache-Control", "no-store");
+  res.sendFile(pdfPath);
 });
 
 /**

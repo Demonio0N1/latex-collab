@@ -33,6 +33,9 @@ openRouter.get("/open", (req, res) => {
   const safeDeepLinkAttr = escapeHtml(deepLink);
   const safeHost = escapeHtml(host);
   const safeDownloadUrl = escapeHtml(APP_DOWNLOAD_URL);
+  // Editor web servido por este mismo servidor: entrar a editar sin instalar nada.
+  const webEditUrl = `/app?id=${encodeURIComponent(id)}&key=${encodeURIComponent(key)}`;
+  const safeWebEditUrl = escapeHtml(webEditUrl);
 
   res.type("html").send(`<!doctype html>
 <html lang="es">
@@ -54,15 +57,13 @@ openRouter.get("/open", (req, res) => {
 </head>
 <body>
   <div class="card">
-    <h1>Abriendo LaTeX Collab…</h1>
-    <p>Te estamos conectando al proyecto en <strong>${safeHost}</strong>. Si no pasa nada en unos
-    segundos, tu navegador bloqueó el intento automático — usa el botón:</p>
-    <a class="button" href="${safeDeepLinkAttr}">Abrir en LaTeX Collab</a>
-    <a class="secondary" href="${safeDownloadUrl}" target="_blank" rel="noopener">¿No tienes la app instalada? Descárgala aquí →</a>
+    <h1>Te invitaron a un proyecto de LaTeX</h1>
+    <p>Proyecto alojado en <strong>${safeHost}</strong>. Elige cómo entrar:</p>
+    <a class="button" href="${safeWebEditUrl}">📝 Editar en el navegador (sin instalar nada)</a>
+    <p style="margin-top:18px">¿Prefieres la app de escritorio?</p>
+    <a class="button" style="background:#2a2c33" href="${safeDeepLinkAttr}">Abrir en la app LaTeX Collab</a>
+    <a class="secondary" href="${safeDownloadUrl}/releases/latest" target="_blank" rel="noopener">Descargar la app (Mac/Windows/Linux/Android) →</a>
   </div>
-  <script>
-    window.location.href = ${JSON.stringify(deepLink)};
-  </script>
 </body>
 </html>`);
 });

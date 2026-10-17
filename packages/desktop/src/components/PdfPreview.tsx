@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { stat } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { compileOnServer, fetchCompiledPdf } from "../api";
 import { findLatexmk, getEngine, pdfPathFor, setEngine, setTexDir, startWatcher, type LatexEngine, type Watcher } from "../latexCompiler";
-import { IS_MACOS, IS_WINDOWS } from "../platform";
+import { IS_MACOS, IS_WEB, IS_WINDOWS } from "../platform";
 
 const LATEX_DOWNLOAD_URL = IS_MACOS
   ? "https://www.tug.org/mactex/" // MacTeX (incluye BasicTeX, más liviano)
@@ -13,6 +14,106 @@ const LATEX_DOWNLOAD_URL = IS_MACOS
 
 interface PdfPreviewProps {
   texFilePath: string | null;
+  /** Para el modo navegador (compilación en el servidor): */
+  baseUrl?: string;
+  projectId?: string;
+  token?: string;
+  filePath?: string | null;
+}
+
+/**
+ * Modo navegador: el SERVIDOR compila (estilo Overleaf). Botón "Compilar",
+ * log visible y el PDF llega como blob.
+ */
+function ServerPdfPreview({
+  baseUrl,
+  projectId,
+  token,
+  filePath,
+}: {
+  baseUrl: string;
+  projectId: string;
+  token: string;
+  filePath: string | null;
+}) {
+  const [status, setStatus] = useState<"compiling" | "ok" | "error">("compiling");
+  const [log, setLog] = useState("");
+  const [showLog, setShowLog] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [engine, setEngineState] = useState<LatexEngine>(getEngine());
+  const texPath = filePath && /\.tex$/i.test(filePath) ? filePath : "main.tex";
+
+  const compile = useCallback(async () => {
+    setStatus("compiling");
+    try {
+      const result = await compileOnServer(baseUrl, projectId, token, texPath, engine);
+      setLog(result.log);
+      if (result.ok) {
+        const blob = await fetchCompiledPdf(baseUrl, projectId, token, texPath);
+        setPdfUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return URL.createObjectURL(blob);
+        });
+        setStatus("ok");
+      } else {
+        setStatus("error");
+        setShowLog(true);
+      }
+    } catch (err) {
+      setLog(String(err instanceof Error ? err.message : err));
+      setStatus("error");
+      setShowLog(true);
+    }
+  }, [baseUrl, projectId, token, texPath, engine]);
+
+  useEffect(() => {
+    void compile();
+  }, [compile]);
+
+  const label = {
+    compiling: "Compilando en el servidor…",
+    ok: "✅ PDF actualizado — pulsa Compilar tras tus cambios",
+    error: "❌ Error de LaTeX — revisa el log",
+  }[status];
+
+  return (
+    <div className="pdf-preview">
+      <div className="pdf-preview-bar">
+        <span className={`pdf-status pdf-status-${status === "compiling" ? "starting" : status === "ok" ? "watching" : "error"}`}>
+          {label}
+        </span>
+        <div className="pdf-preview-bar-actions">
+          <select
+            value={engine}
+            onChange={(e) => {
+              setEngineState(e.target.value as LatexEngine);
+              setEngine(e.target.value as LatexEngine);
+            }}
+          >
+            {(Object.keys(ENGINE_LABELS) as LatexEngine[]).map((key) => (
+              <option key={key} value={key}>
+                {ENGINE_LABELS[key]}
+              </option>
+            ))}
+          </select>
+          <button className="icon-button" disabled={status === "compiling"} onClick={() => void compile()}>
+            {status === "compiling" ? "Compilando…" : "▶ Compilar"}
+          </button>
+          <button className="icon-button" onClick={() => setShowLog((s) => !s)}>
+            {showLog ? "Ocultar log" : "Ver log"}
+          </button>
+        </div>
+      </div>
+      {showLog && <pre className="pdf-log">{log || "Sin salida todavía."}</pre>}
+      <div className="pdf-frame-wrap">
+        {pdfUrl ? (
+          <iframe key={pdfUrl} className="pdf-frame" src={pdfUrl} title="Vista previa PDF" />
+        ) : (
+          <div className="pdf-placeholder">Compilando tu documento en el servidor…</div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 const POLL_MS = 700;
@@ -22,7 +123,14 @@ const ENGINE_LABELS: Record<LatexEngine, string> = {
   lualatex: "LuaLaTeX",
 };
 
-export default function PdfPreview({ texFilePath }: PdfPreviewProps) {
+export default function PdfPreview({ texFilePath, baseUrl, projectId, token, filePath }: PdfPreviewProps) {
+  if (IS_WEB && baseUrl && projectId && token) {
+    return <ServerPdfPreview baseUrl={baseUrl} projectId={projectId} token={token} filePath={filePath ?? null} />;
+  }
+  return <LocalPdfPreview texFilePath={texFilePath} />;
+}
+
+function LocalPdfPreview({ texFilePath }: { texFilePath: string | null }) {
   const [status, setStatus] = useState<"starting" | "watching" | "error" | "nolatex">("starting");
   const [log, setLog] = useState("");
   const [pdfSrc, setPdfSrc] = useState<string | null>(null);
